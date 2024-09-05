@@ -4,26 +4,18 @@
  * @author David Sehnal <david.sehnal@gmail.com>
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  */
-
-//import { G3dProvider } from '../../extensions/g3d/format';
+// Start imports present in base Viewer
 import { VolsegVolumeServerConfig } from '../../extensions/volumes-and-segmentations';
-//import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from '../../extensions/model-archive/quality-assessment/behavior';
-//import { QualityAssessment } from '../../extensions/model-archive/quality-assessment/prop';
-import { StructureRepresentationPresetProvider } from '../../mol-plugin-state/builder/structure/representation-preset';
-// import { DataFormatProvider } from '../../mol-plugin-state/formats/provider';
 import { createPluginUI } from '../../mol-plugin-ui';
 import { PluginUIContext } from '../../mol-plugin-ui/context';
 import { DefaultPluginUISpec, PluginUISpec } from '../../mol-plugin-ui/spec';
 import { PluginCommands } from '../../mol-plugin/commands';
 import { PluginConfig } from '../../mol-plugin/config';
 import { PluginLayoutControlsDisplay } from '../../mol-plugin/layout';
-//import { StateObjectRef} from '../../mol-state';
 import { Color } from '../../mol-util/color';
 import { renderReact18 } from '../../mol-plugin-ui/react18';
 import '../../mol-util/polyfill';
-// import { ObjectKeys } from '../../mol-util/type-helpers';
 import { SaccharideCompIdMapType } from '../../mol-model/structure/structure/carbohydrates/constants';
-//import { SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider } from '../../extensions/sb-ncbr';
 
 // Start import modifications
 import { MolScriptBuilder as MS} from '../../mol-script/language/builder';
@@ -41,11 +33,7 @@ import { StateBuilder, StateObjectSelector } from '../../mol-state';
 import { Phenix } from './phenix';
 import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/representation';
 import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
-// End import modifications
 
-// const CustomFormats = [
-//     ['g3d', G3dProvider] as const
-// ];
 import { PluginContext } from '../../mol-plugin/context';
 
 
@@ -124,7 +112,8 @@ export class Viewer {
         // Save renderer defaults
         this.defaultRendererProps = { ...this.plugin.canvas3d!.props.renderer };
     }
-    // all api functions are defined in a second file, (phenix.ts) and bound to the viewer class
+    // All api functions are defined in a second file, 
+    //   (phenix.ts) and bound to the viewer class in the .phenix. namespace
     phenix = {
         // API methods
         pollStructures: Phenix.pollStructures.bind(this),
@@ -133,41 +122,26 @@ export class Viewer {
 
 
 
-        // Old
+        // Old, need to identify unused.
         cameraMode: Phenix.cameraMode.bind(this),
         postInit: Phenix.postInit.bind(this),
-        // getLociForParams: Phenix.getLociForParams.bind(this),
         loadStructureFromPdbString: Phenix.loadStructureFromPdbString.bind(this),
         generateUniqueKey: Phenix.generateUniqueKey.bind(this),
         getState: Phenix.getState.bind(this),
         setState: Phenix.setState.bind(this),
-        // getQueryFromLoci: Phenix.getQueryFromLoci.bind(this),
         updateFromExternal: Phenix.updateFromExternal.bind(this),
-        //getQueryJSONFromLoci: Phenix.getQueryJSONFromLoci.bind(this),
         getSel: Phenix.getSel.bind(this),
         pollSelection: Phenix.pollSelection.bind(this),
         focusSelected: Phenix.focusSelected.bind(this),
         toggleSelectionMode: Phenix.toggleSelectionMode.bind(this),
-        // select: Phenix.select.bind(this),
-        //setColor: Phenix.setColor.bind(this),
         colorSelection: Phenix.colorSelection.bind(this),
-        //setColorSelected: Phenix.setColorSelected.bind(this),
         queryAll: Phenix.queryAll.bind(this),
-        
-       //queryCurrent: Phenix.queryCurrent.bind(this),
-        //setCurrentSelExpression: Phenix.setCurrentSelExpression.bind(this),
         clearSelection: Phenix.clearSelection.bind(this),
         clearAll: Phenix.clearAll.bind(this),
-        // getColorOfSelection: Phenix.getColorOfSelection.bind(this),
-        // setQueryColor: Phenix.setQueryColor.bind(this),
         normalizeColor: Phenix.normalizeColor.bind(this),
-        // getQueryAll: Phenix.getQueryAll.bind(this),
         debugQuery: Phenix.debugQuery.bind(this),
         getThemeParams: Phenix.getThemeParams.bind(this),
         addRepresentationSelected: Phenix.addRepresentationSelected.bind(this),
-        //removeRepresentationSelected: Phenix.removeRepresentationSelected.bind(this),
-        //getRepresentation: Phenix.getRepresentation.bind(this),
-        //removeRepr: Phenix.removeRepr.bind(this),
         checkSingleEntry: Phenix.checkSingleEntry.bind(this),
         getStructureForRef: Phenix.getStructureForRef.bind(this),
         getSelectedLoci: Phenix.getSelectedLoci.bind(this),
@@ -175,21 +149,14 @@ export class Viewer {
         queryFromExpression: Phenix.queryFromExpression.bind(this),
         selectFromQuery: Phenix.selectFromQuery.bind(this),
         selectFromSel: Phenix.selectFromSel.bind(this),
-        // queryFromJSON: Phenix.queryFromJSON.bind(this),
-
-        // getSelectedQuery: Phenix.getSelectedQuery.bind(this),
         getLocations: Phenix.getLocations.bind(this),
         getLociStats: Phenix.getLociStats.bind(this),
-        //getAllRepresentations: Phenix.getAllRepresentations.bind(this),
-        // getRepresentation: Phenix.getRepresentation.bind(this),
         setTransparencyQuery: Phenix.setTransparencyQuery.bind(this),
-        //setTransparencySelected: Phenix.setTransparencySelected.bind(this),
         volumeRefBehavior: Phenix.volumeRefBehavior.bind(this),
         volumeRefInfo: Phenix.volumeRefInfo.bind(this),
         getVolumeEntry: Phenix.getVolumeEntry.bind(this),
         loadMap: Phenix.loadMap.bind(this),
         syncReferences: Phenix.syncReferences.bind(this),
-        //syncStyle: Phenix.syncStyle.bind(this),
 
     };
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
@@ -277,39 +244,3 @@ export class Viewer {
         this.plugin.layout.events.updated.next(void 0);
     }
   }
-
-
-  
-export interface LoadStructureOptions {
-    representationParams?: StructureRepresentationPresetProvider.CommonParams
-}
-
-// export const ViewerAutoPreset = StructureRepresentationPresetProvider({
-//     id: 'preset-structure-representation-viewer-auto',
-//     display: {
-//         name: 'Automatic (w/ Annotation)', group: 'Annotation',
-//         description: 'Show standard automatic representation but colored by quality assessment (if available in the model).'
-//     },
-//     isApplicable(a) {
-//         return (
-//             !!a.data.models.some(m => QualityAssessment.isApplicable(m, 'pLDDT')) ||
-//             !!a.data.models.some(m => QualityAssessment.isApplicable(m, 'qmean'))
-//         );
-//     },
-//     params: () => StructureRepresentationPresetProvider.CommonParams,
-//     async apply(ref, params, plugin) {
-//         const structureCell = StateObjectRef.resolveAndCheck(plugin.state.data, ref);
-//         const structure = structureCell?.obj?.data;
-//         if (!structureCell || !structure) return {};
-
-//         if (!!structure.models.some(m => QualityAssessment.isApplicable(m, 'pLDDT'))) {
-//             return await QualityAssessmentPLDDTPreset.apply(ref, params, plugin);
-//         } else if (!!structure.models.some(m => QualityAssessment.isApplicable(m, 'qmean'))) {
-//             return await QualityAssessmentQmeanPreset.apply(ref, params, plugin);
-//         } else if (!!structure.models.some(m => SbNcbrPartialChargesPropertyProvider.isApplicable(m))) {
-//             return await SbNcbrPartialChargesPreset.apply(ref, params, plugin);
-//         } else {
-//             return await PresetStructureRepresentations.auto.apply(ref, params, plugin);
-//         }
-//     }
-// });

@@ -21,7 +21,15 @@ class Program(ProgramTemplate):
 
   molstar_env_name = molstar_env
     .type = str
-    .help = "The name for the Python conda env used with molstar"
+    .help = "The name for the Python conda env used to install requirements"
+
+  clone_molstar_repo = False
+    .type = bool
+    .help = "If molstar_adaptbx/../molstar' does not exist, try to clone it"
+
+  molstar_remote = git@github.com:molstar/molstar.git
+    .type = str
+    .help = "The remote repo address for molstar"
   """
 
   datatypes = ['phil']
@@ -39,8 +47,11 @@ class Program(ProgramTemplate):
         
 
     if not molstar_dir.exists():
-      self._print("ERROR: the molstar git repo not found")
-      return
+      if self.params.clone_molstar_repo:
+        command = f"git clone {self.params.molstar_remote} ../molstar"
+      else:
+        self._print("ERROR: the molstar git repo not found")
+        return
     
     # If directory exists, assume it is the correct git repo. Copy files there:
     adaptbx_viewer_dir = adaptbx_dir / "molstar/src/apps/phenix-viewer"
@@ -59,14 +70,15 @@ class Program(ProgramTemplate):
     self._print("Building molstar...")
     
     packages = [
-      '"nodejs>=20"',
+      '"nodejs>=20"', # system nodejs version is likely to be too low
     ]
-
+    # Create a fresh conda env to avoid dependency issues
     create_conda_env(env_name)
     env_dir = get_conda_env_directory(env_name)
     for package in packages:
       install_package_in_env(env_name, package)
 
+    # Install nodejs dependencies
     npm_bin_path = f"{env_dir}/bin/npm"
     commands = [ 
         f"{npm_bin_path} install -g http-server --prefix {env_dir}", # -g for global is important
@@ -76,7 +88,7 @@ class Program(ProgramTemplate):
     for command in commands:
       run_command_in_env(env_name, command)
 
-    # Write config file
+    # Write a config file (subsequent viewer starts will look for this file)
     config = {
       "molstar_env_name":env_name,
       "molstar_build_dir":str(molstar_dir)
@@ -86,7 +98,7 @@ class Program(ProgramTemplate):
     self._print("Done.\n\n")
 
     # Start molstar
-    command = f"{env_dir}/bin/http-server {molstar_dir}"
+    command = f"{env_dir}/bin/http-server {molstar_viewer_dir}"
     print('starting molstar:')
     print(command)
     run_command(command)
