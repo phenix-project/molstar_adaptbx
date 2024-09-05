@@ -5,7 +5,7 @@
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  */
 
-import { G3dProvider } from '../../extensions/g3d/format';
+//import { G3dProvider } from '../../extensions/g3d/format';
 import { VolsegVolumeServerConfig } from '../../extensions/volumes-and-segmentations';
 //import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from '../../extensions/model-archive/quality-assessment/behavior';
 //import { QualityAssessment } from '../../extensions/model-archive/quality-assessment/prop';
@@ -43,9 +43,9 @@ import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/rep
 import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
 // End import modifications
 
-const CustomFormats = [
-    ['g3d', G3dProvider] as const
-];
+// const CustomFormats = [
+//     ['g3d', G3dProvider] as const
+// ];
 import { PluginContext } from '../../mol-plugin/context';
 
 
@@ -203,17 +203,12 @@ export class Viewer {
         const o: ViewerOptions = { ...DefaultViewerOptions, ...definedOptions };
         const defaultSpec = DefaultPluginUISpec();
 
-        const disabledExtension = new Set(o.disabledExtensions ?? []);
-
         const spec: PluginUISpec = {
             actions: defaultSpec.actions,
             behaviors: [
-                ...defaultSpec.behaviors,
-                ...o.extensions.filter(e => !disabledExtension.has(e)).map(e => ExtensionMap[e]),
-            ],
+                ...defaultSpec.behaviors,            ],
             animations: [...defaultSpec.animations || []],
             customParamEditors: defaultSpec.customParamEditors,
-            customFormats: o?.customFormats,
             layout: {
                 initial: {
                     isExpanded: o.layoutIsExpanded,
@@ -246,7 +241,6 @@ export class Viewer {
                 [PluginConfig.General.DisableAntialiasing, o.disableAntialiasing],
                 [PluginConfig.General.PixelScale, o.pixelScale],
                 [PluginConfig.General.PickScale, o.pickScale],
-                [PluginConfig.General.PreferWebGl1, o.preferWebgl1],
                 [PluginConfig.General.AllowMajorPerformanceCaveat, o.allowMajorPerformanceCaveat],
                 [PluginConfig.General.PowerPreference, o.powerPreference],
                 [PluginConfig.Viewport.ShowSettings, o.viewportShowSettings],
