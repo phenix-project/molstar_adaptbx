@@ -559,10 +559,7 @@ export namespace Phenix {
         const selectionQuery = StructureSelectionQuery('Custom Query',sel)
         return selectionQuery
     }
-    export async function debugLoadModel(this: Viewer) {
-        await this.loadStructureFromUrl('https://files.rcsb.org/download/3RZU.cif')
-        this.phenix.updateFromExternal('#debug3rzu')
-    }
+
     export function getThemeParams(this: Viewer) {
         const themeParams = StructureComponentManager.getThemeParams(this.plugin, this.plugin.managers.structure.component.pivotStructure);
         const theme = ParamDefinition.getDefaultValues(themeParams);

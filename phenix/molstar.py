@@ -20,55 +20,34 @@ from libtbx import group_args
 
 from ..gui.model.molstar import MolstarState
 from .server_utils import  NodeHttpServer
-from ..gui.model.selection import Selection
+#from ..gui.model.selection import Selection
 
 
 # =============================================================================
 
 class MolstarGraphics(ModelViewer):
   """
-  The Python interface for the molstar viewer. A specific Molstar plugin is written to pair
-  with this class.
+  The Python interface for the molstar viewer.
   """
   viewer_name = 'Molstar'
-  def __init__(self,web_view,use_web_view=True,dm=None,config_json_file=None):
-    if config_json_file is None:
-      config_json_file = Path(__file__).parent / Path("config.json")
-    ModelViewer.__init__(self)
+  config_default = {
+    "molstar_env_name":"molstar_env",
+    "molstar_build_dir":str(Path(__file__,"../../molstar/build/apps/phenix-viewer"))
+    }
 
+  def __init__(self,web_view,dm=None,config=None):
+    ModelViewer.__init__(self)
+    if not config:
+      config = self.config_default.copy()
+    self.config = config
     self.web_view = web_view
     self.state = group_args(molstarState=None)
     self.dm = dm
 
-
-    self.use_web_view = use_web_view
-    self.selenium_driver = None
     self.log_list = []
     self.debug = True
     self._initial_sync_done = False # Set to True the first time communication is established with js viewer
 
-
-
-
-    # get config variables
-    with open(config_json_file,"r") as fh:
-      config = json.load(fh)
-      self.config = group_args(**config)
-      expected_config_params = [
-        "node_js_path",
-        "volume_server_relative_path",
-        "pack_script_relative_path",
-        "molstar_app_relative_path",
-      ]
-      for name in expected_config_params:
-        assert name in config, f"Missing necessary config variable: '{name}'"
-
-      for key,value in config.items():
-        if key == 'node_js_path' and value == '':
-          value = 'npm'
-        else:
-          value = str(Path(__file__).parent / Path(value))
-        setattr(self.config,key, value)
 
     # Flags
     self._blocking_commands = False
@@ -114,10 +93,8 @@ class MolstarGraphics(ModelViewer):
     -------
       Command for running Molstar
     '''
-    self.app_root_dir = Path(self.config.molstar_app_relative_path)
 
-    self.node_js_path = self.config.node_js_path
-    self.command = ['http-server',str(self.app_root_dir)]
+    self.command = ['http-server'self.config["molstar_build_dir"]]
     return self.command
 
 
@@ -271,7 +248,7 @@ class MolstarGraphics(ModelViewer):
   # ---------------------------------------------------------------------------
   # Selection
 
-  def _set_query_string(self,selection: Selection):
+  def _set_query_string(self,selection):
     # Returns js string to set 'query' from a Selection object
     molstar_syntax = selection.molstar_syntax
     js_str = f"""
@@ -283,7 +260,7 @@ class MolstarGraphics(ModelViewer):
     return js_str
     
 
-  def select_from_selection(self,selection: Selection):
+  def select_from_selection(self,selection):
     """
     Make a selection from a Selection object. All other selection functions lead here
     """
@@ -313,7 +290,8 @@ class MolstarGraphics(ModelViewer):
     result_str = self.send_command(command,callback=callback,sync=True)
     try:
       atom_records = json.loads(result_str)
-      selection = Selection.from_atom_records(atom_records)
+      # TODO: don't require selection code in adaptbx?
+      #selection = Selection.from_atom_records(atom_records)
       return selection
     except:
       self.log(result_str)
