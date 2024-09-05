@@ -5,48 +5,48 @@
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  */
 
-import { G3dProvider } from '@molstar/extensions/g3d/format';
-import { VolsegVolumeServerConfig } from '@molstar/extensions/volumes-and-segmentations';
-//import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from '@molstar/extensions/model-archive/quality-assessment/behavior';
-//import { QualityAssessment } from '@molstar/extensions/model-archive/quality-assessment/prop';
-import { StructureRepresentationPresetProvider } from '@molstar/mol-plugin-state/builder/structure/representation-preset';
-// import { DataFormatProvider } from '@molstar/mol-plugin-state/formats/provider';
-import { createPluginUI } from '@molstar/mol-plugin-ui';
-import { PluginUIContext } from '@molstar/mol-plugin-ui/context';
-import { DefaultPluginUISpec, PluginUISpec } from '@molstar/mol-plugin-ui/spec';
-import { PluginCommands } from '@molstar/mol-plugin/commands';
-import { PluginConfig } from '@molstar/mol-plugin/config';
-import { PluginLayoutControlsDisplay } from '@molstar/mol-plugin/layout';
-//import { StateObjectRef} from '@molstar/mol-state';
-import { Color } from '@molstar/mol-util/color';
-import { renderReact18 } from '@molstar/mol-plugin-ui/react18';
-import '@molstar/mol-util/polyfill';
-// import { ObjectKeys } from '@molstar/mol-util/type-helpers';
-import { SaccharideCompIdMapType } from '@molstar/mol-model/structure/structure/carbohydrates/constants';
-//import { SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider } from '@molstar/extensions/sb-ncbr';
+import { G3dProvider } from '../../extensions/g3d/format';
+import { VolsegVolumeServerConfig } from '../../extensions/volumes-and-segmentations';
+//import { QualityAssessmentPLDDTPreset, QualityAssessmentQmeanPreset } from '../../extensions/model-archive/quality-assessment/behavior';
+//import { QualityAssessment } from '../../extensions/model-archive/quality-assessment/prop';
+import { StructureRepresentationPresetProvider } from '../../mol-plugin-state/builder/structure/representation-preset';
+// import { DataFormatProvider } from '../../mol-plugin-state/formats/provider';
+import { createPluginUI } from '../../mol-plugin-ui';
+import { PluginUIContext } from '../../mol-plugin-ui/context';
+import { DefaultPluginUISpec, PluginUISpec } from '../../mol-plugin-ui/spec';
+import { PluginCommands } from '../../mol-plugin/commands';
+import { PluginConfig } from '../../mol-plugin/config';
+import { PluginLayoutControlsDisplay } from '../../mol-plugin/layout';
+//import { StateObjectRef} from '../../mol-state';
+import { Color } from '../../mol-util/color';
+import { renderReact18 } from '../../mol-plugin-ui/react18';
+import '../../mol-util/polyfill';
+// import { ObjectKeys } from '../../mol-util/type-helpers';
+import { SaccharideCompIdMapType } from '../../mol-model/structure/structure/carbohydrates/constants';
+//import { SbNcbrPartialChargesPreset, SbNcbrPartialChargesPropertyProvider } from '../../extensions/sb-ncbr';
 
 // Start import modifications
-import { MolScriptBuilder as MS} from '@molstar/mol-script/language/builder';
-import {  StructureSelectionQuery, StructureSelectionQueries } from '@molstar/mol-plugin-state/helpers/structure-selection-query'
+import { MolScriptBuilder as MS} from '../../mol-script/language/builder';
+import {  StructureSelectionQuery, StructureSelectionQueries } from '../../mol-plugin-state/helpers/structure-selection-query'
 import { TwoWayDictionary, PhenixStateClass } from './helpers';
-import { StructureProperties as Props, StructureProperties } from '@molstar/mol-model/structure';
-import { VolumeStreaming } from '@molstar/mol-plugin/behavior/dynamic/volume-streaming/behavior';
-import { StateSelection } from '@molstar/mol-state';
-import { StructureComponentManager } from '@molstar/mol-plugin-state/manager/structure/component';
-import { ParamDefinition } from '@molstar/mol-util/param-definition';
-import { StructureElement, StructureQuery } from '@molstar/mol-model/structure';
-import { StructureQueryHelper } from '@molstar/mol-plugin-state/helpers/structure-query';
-import { StateTransforms } from '@molstar/mol-plugin-state/transforms';
-import { StateBuilder, StateObjectSelector } from '@molstar/mol-state';
+import { StructureProperties as Props, StructureProperties } from '../../mol-model/structure';
+import { VolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/behavior';
+import { StateSelection } from '../../mol-state';
+import { StructureComponentManager } from '../../mol-plugin-state/manager/structure/component';
+import { ParamDefinition } from '../../mol-util/param-definition';
+import { StructureElement, StructureQuery } from '../../mol-model/structure';
+import { StructureQueryHelper } from '../../mol-plugin-state/helpers/structure-query';
+import { StateTransforms } from '../../mol-plugin-state/transforms';
+import { StateBuilder, StateObjectSelector } from '../../mol-state';
 import { Phenix } from './phenix';
-import { StructureRepresentation3D } from '@molstar/mol-plugin-state/transforms/representation';
-import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '@molstar/mol-plugin/behavior/dynamic/volume-streaming/transformers';
+import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/representation';
+import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
 // End import modifications
 
 const CustomFormats = [
     ['g3d', G3dProvider] as const
 ];
-import { PluginContext } from '@molstar/mol-plugin/context';
+import { PluginContext } from '../../mol-plugin/context';
 
 
 
