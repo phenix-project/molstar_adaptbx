@@ -1,6 +1,7 @@
 from __future__ import absolute_import, division, print_function
 import subprocess
 import sys
+import time
 from pathlib import Path
 import code
 from phenix.program_template import ProgramTemplate
@@ -71,20 +72,22 @@ class Program(ProgramTemplate):
     env_bin_dir = f"{env_dir}/bin"
     molstar_install_dir = str(Path(__file__).parent.parent / "molstar")
     server = NodeHttpServer([
-      f"{env_bin_dir}/http-server",
-      f"{molstar_install_dir}/build/phenix-viewer"
+      f"{env_bin_dir}/node",
+      f"{molstar_install_dir}/src/phenix/server.js"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
-    # # Set up a server to expose the api
-    # api_server = NodeHttpServer([
-    #    f"{env_bin_dir}/node",
-    #    f"{molstar_install_dir}/src/phenix/server.js",
-    # ],port=view_server.port)
     self.viewer = MolstarGraphics(
       dm=self.data_manager,
       server = server,
     )
     self.viewer.start_viewer()
+
+    # If default model is set, load it immediately
+    default_filename = self.data_manager._default_model
+    if default_filename:
+      print(f"Found default model with filename: {default_filename}")
+      time.sleep(2)
+      self.viewer.load_model(default_filename)
 
     # Start interactive shell
     code.interact(banner=banner,local=locals())

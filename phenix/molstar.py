@@ -154,19 +154,19 @@ class MolstarGraphics(ModelViewer):
     else:
       # open in qt web view
       self.web_view.setUrl(QUrl(self.url))
-      counter = 0
-      while counter<timeout:
-        self._check_status()
-        if self._connected:
-          break
-        counter += 1
-        time.sleep(1)
-      if not self._connected:
-        raise Sorry('The Molstar on the QT web view is not reachable at {} after '
-                    '{} seconds.'.format(self.url, counter))
-      self.log('Molstar is ready')
-    
 
+    # Wait until ready
+    counter = 0
+    while counter<timeout:
+      self._check_status()
+      if self._connected:
+        break
+      counter += 1
+      time.sleep(1)
+    if not self._connected:
+      raise Sorry('The Molstar on the QT web view is not reachable at {} after '
+                  '{} seconds.'.format(self.url, counter))
+    self.log('Molstar is ready')
     self.log('-'*79)
     self.log()
 
@@ -198,21 +198,25 @@ class MolstarGraphics(ModelViewer):
   # ---------------------------------------------------------------------------
   # Remote communication
 
+  @property
+  def url_api(self):
+    return self.server.url + "/action"
 
   def send_request(self,request: Request):
     # Send the POST request with the JSON data
-    response = requests.post(self.server.url, json=request.to_dict())
-    d = response.json()
-    if isinstance(d,dict) and  "responses" in d:
-      try:      
+    response = requests.post(self.url_api, json=request.to_dict())
+    
+    try:
+      d = response.json()
+      if isinstance(d,dict) and  "responses" in d:
         if "success" not in d or not d["success"]:
             return None
         if isinstance(d,dict) and  "responses" in d and isinstance(d["responses"],list):
           if isinstance(d["responses"][0],dict) and "output" in d["responses"][0]:
             return json.loads(d["responses"][0]["output"])
-      except:
-        print("Failed to unpack responses")
-        print(response.text)
+    except:
+      print("Failed to unpack responses")
+      print(response.text)
 
    
 
@@ -392,7 +396,7 @@ class MolstarGraphics(ModelViewer):
     molstar_state = MolstarState.from_empty()
     req = Request(data=molstar_state)
     # Send the POST request with the JSON data
-    response = requests.post(self.server.url, json=req.to_dict())
+    response = requests.post(self.url_api, json=req.to_dict())
     response_json = json.loads(response.json()["responses"][0]["output"])
     molstar_state = MolstarState.from_json(response_json)
     return molstar_state
