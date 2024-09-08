@@ -66,7 +66,43 @@
 
             // console.log('Available extensions: ', Object.keys(molstar.ExtensionMap));
 
-            molstar.Viewer.create('app', {
+            // Phenix commands server
+            // Connect to the server's SSE endpoint
+            const eventSource = new EventSource('http://localhost:3000/events');
+
+            // Set up WebSocket connection to the server
+            const ws = new WebSocket('ws://localhost:3000');
+
+            // Function that handles incoming messages via SSE
+            eventSource.onmessage = function(event) {
+            // Pass on the event to the viewer. event.data is the JSON string
+            const output = window.viewer.process_request(event.data);
+            
+            // After processing the event, send a response back to the server via WebSocket
+            const responseData = {
+                status: 'Processed event',
+                output: JSON.stringify(output)  // Add more details if needed
+            };
+
+            // Make sure WebSocket connection is open before sending
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(responseData));
+            } else {
+                ws.addEventListener('open', () => {
+                ws.send(JSON.stringify(responseData));
+                });
+            }
+            };
+
+            // Optional: Handle WebSocket connection close or error
+            ws.onclose = function() {
+            console.log('WebSocket connection closed');
+            };
+
+            ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            };
+            PhenixViewer.create('app', {
                 disabledExtensions: [], // anything from Object.keys(molstar.ExtensionMap)
                 layoutShowControls: !hideControls,
                 viewportShowExpand: false,
@@ -123,6 +159,8 @@
                     // to aid GC
                     viewer.dispose();
                 });
+                // bind to window
+                window.viewer = viewer
             });
         </script>
         <!-- __MOLSTAR_ANALYTICS__ -->

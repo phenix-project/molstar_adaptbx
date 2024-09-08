@@ -1,28 +1,22 @@
 import { Loci } from '../../mol-model/loci';
-// import { Structure, StructureElement, StructureQuery } from '../../mol-model/structure';
 import { StructureElement } from '../../mol-model/structure';
-
 import { clearStructureOverpaint } from '../../mol-plugin-state/helpers/structure-overpaint';
 import { StructureQueryHelper } from '../../mol-plugin-state/helpers/structure-query';
 import { StructureComponentManager } from '../../mol-plugin-state/manager/structure/component';
-//import { PluginStateObject } from '../../mol-plugin-state/objects';
 import { StateTransforms } from '../../mol-plugin-state/transforms';
 import { PluginCommands } from '../../mol-plugin/commands';
 import { Color } from '../../mol-util/color';
 import { ParamDefinition } from '../../mol-util/param-definition';
-// import { CreateVolumeStreamingBehavior, CreateVolumeStreamingInfo, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
 import { CreateVolumeStreamingBehavior, CreateVolumeStreamingInfo } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
-import { Viewer } from './app';
+import { PhenixViewer } from './app';
 import { getLocationArray, phenixSelFromLoci, TwoWayDictionary, PhenixStateClass} from './helpers';
 import {  PhenixReferenceClass, PhenixStructureClass, PhenixComponentClass, PhenixRepresentationClass} from './helpers';
-// import { StructureSelectionModifier} from '../../mol-plugin-state/manager/structure/selection';
 import { StructureSelectionQuery } from '../../mol-plugin-state/helpers/structure-selection-query';
-
 import { StateSelection } from '../../mol-state';
 
 // @ts-ignore
 export namespace Phenix {
-    export function cameraMode(this: Viewer) {
+    export function cameraMode(this: PhenixViewer) {
         if (this.isFocused) {
             return 'camera-target';
         } else {
@@ -30,7 +24,7 @@ export namespace Phenix {
         }
     }
 
-    export function postInit(this: Viewer) {
+    export function postInit(this: PhenixViewer) {
         // subscribe hover
         this.plugin.behaviors.interaction.hover.subscribe(ev => {
             if (StructureElement.Loci.is(ev.current.loci)) {
@@ -55,7 +49,7 @@ export namespace Phenix {
         });
     }
 
-    // export function getLociForParams(this: Viewer, query: SelectionQuery): Loci | undefined {
+    // export function getLociForParams(this: PhenixViewer, query: SelectionQuery): Loci | undefined {
     //     if (query.params.refId === '') {
     //         throw new Error('Provide a reference');
     //     }
@@ -68,7 +62,7 @@ export namespace Phenix {
     //     }
     // }
 
-    export async function loadStructureFromPdbString(this: Viewer, data: string, format: string, label: string, external_ref_id: string) {
+    export async function loadStructureFromPdbString(this: PhenixViewer, data: string, format: string, label: string, external_ref_id: string) {
         // V2 Function
         this.hasSynced = false;
         const _data = await this.plugin.builders.data.rawData({ data: data, label: label });
@@ -79,9 +73,9 @@ export namespace Phenix {
         await this.phenix.updateFromExternal(external_ref_id)
         this.plugin.managers.interactivity.setProps({granularity: 'element' }) // default select by atom
     }
-        
+    
 
-    export async function updateFromExternal(this: Viewer, external_ref_id: string) {
+    export async function updateFromExternal(this: PhenixViewer, external_ref_id: string) {
         // V2 Function
         // Manage reference ids
         console.log('Adding model with external refId: ', external_ref_id);
@@ -245,7 +239,7 @@ export namespace Phenix {
       }
       
 
-    export function generateUniqueKey(this: Viewer, length: number = 16): string {
+    export function generateUniqueKey(this: PhenixViewer, length: number = 16): string {
         // Define a string with all possible characters for the key
         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';
@@ -263,7 +257,7 @@ export namespace Phenix {
         return result;
       }
 
-    export function pollStructures(this: Viewer) {
+    export function pollStructures(this: PhenixViewer) {
 
         const refs: string[] = [];
         const structures = this.plugin.managers.structure.hierarchy.current.structures;
@@ -276,11 +270,11 @@ export namespace Phenix {
         return JSON.stringify(refs);
     }
 
-    export function setState(this: Viewer) {
+    export function setState(this: PhenixViewer) {
         this.phenixState.has_synced = true
     }
 
-    export function syncReferences(this: Viewer){
+    export function syncReferences(this: PhenixViewer){
       // const result = { ...this.phenixState };
       // const references = result.references;
       // for (const refId in references) {
@@ -297,7 +291,7 @@ export namespace Phenix {
       // this.phenixState = result
     }
 
-    // export function syncStyle(this: Viewer){
+    // export function syncStyle(this: PhenixViewer){
     //   const result = { ...this.phenixState };
     //   const references = result.references;
 
@@ -314,26 +308,26 @@ export namespace Phenix {
     //       }
 
 
-    export function getState(this: Viewer) {
+    export function getState(this: PhenixViewer) {
         // // @ts-ignore
         // result.hasSynced = this.hasSynced;
         return JSON.stringify(this.phenixState); // debug
 
     }
-    export function queryFromExpression(this:Viewer,selection_expression: any){
+    export function queryFromExpression(this:PhenixViewer,selection_expression: any){
         const selectionQuery = StructureSelectionQuery('Phenix Query',selection_expression)
         return selectionQuery
         //this.currentSelExpression = selectionQuery.expression
         //this.phenix.selectFromQuery(selectionQuery)
     }
 
-    export function selectFromSel(this:Viewer,sel:any){
+    export function selectFromSel(this:PhenixViewer,sel:any){
         const selectionQuery = StructureSelectionQuery('Custom Query',sel)
         this.currentSelExpression = selectionQuery.expression
         this.phenix.selectFromQuery(selectionQuery)
     }
 
-    export function selectFromQuery(this: Viewer, selectionQuery: any) {
+    export function selectFromQuery(this: PhenixViewer, selectionQuery: any) {
         // V2 Function
         this.currentSelExpression = selectionQuery.expression;
         this.plugin.managers.structure.selection.fromSelectionQuery("set",selectionQuery,false)
@@ -354,7 +348,7 @@ export namespace Phenix {
         // focus loci
         this.plugin.managers.camera.focusLoci(loci);
     }
-    export function focusSelected(this: Viewer){
+    export function focusSelected(this: PhenixViewer){
         const loci = this.phenix.getSelectedLoci();
         // if empty, stop
         if (Loci.isEmpty(loci)) {
@@ -371,7 +365,7 @@ export namespace Phenix {
         this.plugin.managers.camera.focusLoci(loci);
     }
 
-    // export function getQueryFromLoci(this: Viewer, loci: Loci) {
+    // export function getQueryFromLoci(this: PhenixViewer, loci: Loci) {
     //     // console.log("get query from loci")
     //     // @ts-ignore
     //     const data_id = loci.structure.state.model.id;
@@ -388,13 +382,13 @@ export namespace Phenix {
     //         return query;
     //     }
     // }
-    // export function getQueryJSONFromLoci(this: Viewer, loci: Loci) {
+    // export function getQueryJSONFromLoci(this: PhenixViewer, loci: Loci) {
     //     const query = this.phenix.getQueryFromLoci(loci);
     //     const queryJSON = JSON.stringify(query);
     //     return queryJSON;
     // }
 
-    export function pollSelection(this: Viewer): string {
+    export function pollSelection(this: PhenixViewer): string {
         // V2 Function
         const loci = this.phenix.getSelectedLoci();
         //const query = this.phenix.getQueryFromLoci(loci);
@@ -404,7 +398,7 @@ export namespace Phenix {
         return JSON.stringify(phenixSel);
     }
     
-    // export async function select(this: Viewer, query: SelectionQuery) {
+    // export async function select(this: PhenixViewer, query: SelectionQuery) {
 
     //     // get query as a loci
     //     // const loci = this.phenix.getLociForParams(query);
@@ -432,7 +426,7 @@ export namespace Phenix {
     //     // focus loci
     //     this.plugin.managers.camera.focusLoci(loci);
     // }
-    export function setColor(this: Viewer, param: { highlight?: any, select?: any }) {
+    export function setColor(this: PhenixViewer, param: { highlight?: any, select?: any }) {
 
         const renderer = this?.plugin?.canvas3d?.props.renderer;
         const rParam= {};
@@ -478,7 +472,7 @@ export namespace Phenix {
         return color;
     }
 
-    export async function clearSelection(this: Viewer) {
+    export async function clearSelection(this: PhenixViewer) {
         this.plugin.managers.interactivity.lociSelects.deselectAll();
         // reset theme to default
         // if (this.selectedParams && this.selectedParams.nonSelectedColor) {
@@ -506,7 +500,7 @@ export namespace Phenix {
         this.selectedParams = undefined;
     }
 
-    export function clearAll(this: Viewer) {
+    export function clearAll(this: PhenixViewer) {
         // this.clearSelection();
         this.plugin.clear();
         this.plugin.build();
@@ -519,11 +513,11 @@ export namespace Phenix {
         this.hasSynced = true;
         // this.hasVolumes = false;
     }
-    export function queryAll(this:Viewer){
+    export function queryAll(this:PhenixViewer){
         const queryAll = StructureSelectionQuery('All', this.MS.struct.generator.all(), { category: '', priority: 1000 }); 
         return queryAll
     }
-    // export function queryCurrent(this:Viewer,contextData: any | undefined){
+    // export function queryCurrent(this:PhenixViewer,contextData: any | undefined){
     //     if (!contextData){
     //       contextData = { category: '', referencesCurrent: true }
     //     }
@@ -531,28 +525,28 @@ export namespace Phenix {
     //     return queryCurrent
     // }
 
-    // export function setCurrentSelExpression(this:Viewer){
+    // export function setCurrentSelExpression(this:PhenixViewer){
     //     var sel = this.phenix.queryCurrent()
     //     this.currentSelExpression = sel.expression
     // }
 
     
-    export function selectAll(this:Viewer){
+    export function selectAll(this:PhenixViewer){
         const queryAll = this.phenix.queryAll()
         this.phenix.selectFromQuery(queryAll)
     }
-    export async function deselectAll(this: Viewer) {
+    export async function deselectAll(this: PhenixViewer) {
         // V2 Function
         this.plugin.managers.interactivity.lociSelects.deselectAll();
     }
-    // export function getQueryAll(this: Viewer, refId: string) {
+    // export function getQueryAll(this: PhenixViewer, refId: string) {
     //     const ref = this.refMapping.retrieveRef(refId);
     //     const query = { ...allSelectionQuery };
     //     // @ts-ignore
     //     query.params.refId = ref.molstarRefId;
     //     return query;
     // }
-    export function debugQuery(this: Viewer){
+    export function debugQuery(this: PhenixViewer){
         const MS = this.MS
         const sel = MS.struct.generator.atomGroups({
                   'atom-test': MS.core.rel.eq([MS.ammp('label_comp_id'), 'LEU'])})
@@ -560,7 +554,7 @@ export namespace Phenix {
         return selectionQuery
     }
 
-    export function getThemeParams(this: Viewer) {
+    export function getThemeParams(this: PhenixViewer) {
         const themeParams = StructureComponentManager.getThemeParams(this.plugin, this.plugin.managers.structure.component.pivotStructure);
         const theme = ParamDefinition.getDefaultValues(themeParams);
 
@@ -573,7 +567,7 @@ export namespace Phenix {
         // theme.action.params = { value: 1.0 };
         return theme;
     }
-    export async function addRepresentationSelected(this: Viewer,reprName: string) {
+    export async function addRepresentationSelected(this: PhenixViewer,reprName: string) {
         // const phenixRepresentationKey = this.phenix.generateUniqueKey();
         // const phenixRepresentationObj = new PhenixRepresentationClass(phenixRepresentationKey,reprName);
         // this.objectStoragePhenix.set(phenixRepresentationKey,phenixRepresentationObj)
@@ -596,7 +590,7 @@ export namespace Phenix {
 
 
     }
-    // export async function removeRepresentationSelected(this: Viewer, reprName: string) {
+    // export async function removeRepresentationSelected(this: PhenixViewer, reprName: string) {
 
     //     // // Structure list to apply selection
     //     // const ref = this.refMapping.retrieveRef(query.params.refId);
@@ -632,20 +626,20 @@ export namespace Phenix {
             throw new Error('The map is empty.');
         }
     }
-    export function getSel(this: Viewer) {
+    export function getSel(this: PhenixViewer) {
         // V2 Function
         // @ts-ignore
         return this.plugin.managers.interactivity.lociSelects.sel;
     }
 
-    export function getSelectedLoci(this: Viewer): Loci {
+    export function getSelectedLoci(this: PhenixViewer): Loci {
         // V2 Function
         const entry_map = this.phenix.getSel().entries;
         const result = this.phenix.checkSingleEntry(entry_map);
         const loci = result.value.selection;
         return loci;
     }
-    export function getSelectedStructure(this:Viewer): any {
+    export function getSelectedStructure(this:PhenixViewer): any {
         const structures = this.plugin.managers.structure.hierarchy.getStructuresWithSelection();
         if (structures.length > 1) {
             throw new Error('More than one selected structure.',);
@@ -653,7 +647,7 @@ export namespace Phenix {
         return structures[0]
         
     }
-    // export function getSelectedQuery(this: Viewer): SelectionQuery {
+    // export function getSelectedQuery(this: PhenixViewer): SelectionQuery {
     //     // Note: this is incomplete because it doesn't account cross-model selections
     //     const entry_map = this.phenix.getSel().entries;
     //     const result = this.phenix.checkSingleEntry(entry_map);
@@ -662,15 +656,15 @@ export namespace Phenix {
     //     return query;
     // }
 
-    export function getLocations(this: Viewer, loci: Loci) {
+    export function getLocations(this: PhenixViewer, loci: Loci) {
         return getLocationArray(loci);
     }
 
-    export function getLociStats(this: Viewer, loci: Loci) {
+    export function getLociStats(this: PhenixViewer, loci: Loci) {
         // @ts-ignore
         return StructureElement.Stats.ofLoci(loci);
     }
-    // export function getColorOfSelection(this: Viewer, query: SelectionQuery) {
+    // export function getColorOfSelection(this: PhenixViewer, query: SelectionQuery) {
     //     const ref = this.refMapping.retrieveRef(query.params.refId);
     //     // @ts-ignore
     //     const themeParams = StructureComponentManager.getThemeParams(this.plugin, ref.structure);
@@ -678,7 +672,7 @@ export namespace Phenix {
     //     return colorValue;
     // }
 
-    export async function colorSelection(this: Viewer, query: StructureSelectionQuery, R: number, G: number, B: number) {
+    export async function colorSelection(this: PhenixViewer, query: StructureSelectionQuery, R: number, G: number, B: number) {
         
         this.phenix.selectFromQuery(query)
         const loci = this.phenix.getSelectedLoci()
@@ -695,7 +689,7 @@ export namespace Phenix {
 
     }
 
-    // export async function setColorSelected(this: Viewer,R: number, G: number, B: number) {
+    // export async function setColorSelected(this: PhenixViewer,R: number, G: number, B: number) {
     //     const loci = this.phenix.getSelectedLoci()
     //     const structure = this.phenix.getSelectedStructure()
         
@@ -712,19 +706,19 @@ export namespace Phenix {
 
       
 
-    export function getStructureForRef(this:Viewer, phenixRefId: string){
+    export function getStructureForRef(this:PhenixViewer, phenixRefId: string){
         const refObj = this.objectStoragePhenix.getByKey(phenixRefId);
         const structureKey = refObj.getStructureKey()
         const structure = this.objectStorageMolstar.getByKey(structureKey)
         return structure
     }
 
-    // export async function setTransparencySelected(this: Viewer,component_name: string | undefined, representation_name: string | undefined, value: number){
+    // export async function setTransparencySelected(this: PhenixViewer,component_name: string | undefined, representation_name: string | undefined, value: number){
     //     const query = this.phenix.queryCurrent()
     //     this.phenix.setTransparencyQuery(query,component_name,representation_name,value)
     // }
 
-    export async function setTransparencyQuery(this: Viewer, query: StructureSelectionQuery, component_name: string | undefined, representation_name: string | undefined, value: number) {
+    export async function setTransparencyQuery(this: PhenixViewer, query: StructureSelectionQuery, component_name: string | undefined, representation_name: string | undefined, value: number) {
         // reference: https://github.com/molstar/molstar/issues/149
         // var selectionQuery = this.phenix.queryCurrent()
         // this.phenix.selectFromQuery(selectionQuery)
@@ -814,7 +808,7 @@ export namespace Phenix {
       }
 
 
-    export function toggleSelectionMode(this: Viewer, isVisible: boolean) {
+    export function toggleSelectionMode(this: PhenixViewer, isVisible: boolean) {
         if (!isVisible) {
             // console.log('Clearing selection');
             this.plugin.managers.interactivity.lociSelects.deselectAll();
@@ -824,7 +818,7 @@ export namespace Phenix {
     }
 
 
-    export async function loadMap(this: Viewer, modelId: string, volumeId: string) {
+    export async function loadMap(this: PhenixViewer, modelId: string, volumeId: string) {
         return
         // this.hasSynced = false;
         // const refIdMolstar = this.refMapping.retrieveRefId(modelId);
@@ -851,16 +845,16 @@ export namespace Phenix {
 
     }
 
-    export function getVolumeEntry(this: Viewer, volumeId: string) {
+    export function getVolumeEntry(this: PhenixViewer, volumeId: string) {
         const entry = this.phenix.volumeRefInfo().params.values.entries.filter((entry: any) => entry.dataId === volumeId)[0];
         return entry;
     }
-    export function volumeRefInfo(this: Viewer) {
+    export function volumeRefInfo(this: PhenixViewer) {
         const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingInfo));
         // const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingBehavior));
         return refs[0];
     }
-    export function volumeRefBehavior(this: Viewer) {
+    export function volumeRefBehavior(this: PhenixViewer) {
         const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingBehavior));
         // console.log('length of behavior refs: ', refs.length);
         return refs[0];

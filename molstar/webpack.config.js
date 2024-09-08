@@ -9,17 +9,11 @@ const tests = [
 ];
 
 module.exports = [
-    {
-        resolve: {
-          alias: {
-            '@molstar': path.resolve(__dirname, "/Users/user/software/debug/modules/molstar/src/"),
-          },
-        },
-      },
-    createApp('phenix-viewer', 'molstar'),
+    
     createApp('viewer', 'molstar'),
     createApp('docking-viewer', 'molstar'),
     createApp('mesoscale-explorer', 'molstar'),
+    createApp('phenix-viewer', 'molstar'),
     ...examples.map(createExample),
     ...tests.map(createBrowserTest)
 ];

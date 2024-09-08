@@ -5,7 +5,6 @@
  * @author Alexander Rose <alexander.rose@weirdbyte.de>
  */
 // Start imports present in base Viewer
-import { VolsegVolumeServerConfig } from '../../extensions/volumes-and-segmentations';
 import { createPluginUI } from '../../mol-plugin-ui';
 import { PluginUIContext } from '../../mol-plugin-ui/context';
 import { DefaultPluginUISpec, PluginUISpec } from '../../mol-plugin-ui/spec';
@@ -33,8 +32,9 @@ import { StateBuilder, StateObjectSelector } from '../../mol-state';
 import { Phenix } from './phenix';
 import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/representation';
 import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
-
+import { Request } from './api';
 import { PluginContext } from '../../mol-plugin/context';
+
 
 
 
@@ -62,14 +62,11 @@ const DefaultViewerOptions = {
     pluginStateServer: PluginConfig.State.DefaultServer.defaultValue,
     volumeStreamingServer: PluginConfig.VolumeStreaming.DefaultServer.defaultValue,
     volumeStreamingDisabled: !PluginConfig.VolumeStreaming.Enabled.defaultValue,
-    pdbProvider: PluginConfig.Download.DefaultPdbProvider.defaultValue,
-    emdbProvider: PluginConfig.Download.DefaultEmdbProvider.defaultValue,
     saccharideCompIdMapType: 'default' as SaccharideCompIdMapType,
-    volumesAndSegmentationsDefaultServer: VolsegVolumeServerConfig.DefaultServer.defaultValue,
 };
 type ViewerOptions = typeof DefaultViewerOptions;
 
-export class Viewer {
+export class PhenixViewer {
     // make some library components available for debugging
     Props = Props;
     StructureElement = StructureElement;
@@ -85,6 +82,7 @@ export class Viewer {
     InitVolumeStreaming = InitVolumeStreaming;
     // Instance variables
     selectedParams: any;
+    app: any;
     //debugQuery = debugQuery;
     isHighlightColorUpdated: boolean;
     objectStoragePhenix = new TwoWayDictionary<string, any>(); // phenixKey: DataClass JSON serializable object
@@ -103,7 +101,6 @@ export class Viewer {
     Color = Color;
     PluginContext = PluginContext;
     StateBuilder = StateBuilder;
-
     PluginCommands = PluginCommands;
     StateTransforms = StateTransforms;
     StructureQuery = StructureQuery;
@@ -119,6 +116,7 @@ export class Viewer {
         pollStructures: Phenix.pollStructures.bind(this),
         selectAll: Phenix.selectAll.bind(this),
         deselectAll: Phenix.deselectAll.bind(this),
+        //start_express: Phenix.start_express.bind(this),
 
 
 
@@ -159,7 +157,14 @@ export class Viewer {
         syncReferences: Phenix.syncReferences.bind(this),
 
     };
+    process_request(data: string) {
+        // @ts-ignore
+        const request = Request.fromJSON(data)
+        const output =  (request.data.run(this) as unknown)
+        return output
+    }
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
+
         const definedOptions = {} as any;
         // filter for defined properies only so the default values
         // are property applied
@@ -237,10 +242,15 @@ export class Viewer {
                 //plugin.builders.structure.representation.registerPreset(ViewerAutoPreset);
             }
         });
-        return new Viewer(plugin);
+        return new PhenixViewer(plugin);
     }
     
     handleResize() {
         this.plugin.layout.events.updated.next(void 0);
     }
+    dispose() {
+        this.plugin.dispose();
+    }
   }
+
+(window as any).PhenixViewer = PhenixViewer;

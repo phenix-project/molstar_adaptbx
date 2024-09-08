@@ -10,10 +10,8 @@ from molstar_adaptbx.phenix.utils import (
   install_package_in_env,
   run_command_in_env,
   run_command,
-  get_conda_env_directory
+  get_conda_env_directory,
 )
-
-
 
 class Program(ProgramTemplate):
 
@@ -23,9 +21,17 @@ class Program(ProgramTemplate):
     .type = str
     .help = "The name for the Python conda env used to install requirements"
 
-  clone_molstar_repo = False
+  clone_molstar_repo = True
     .type = bool
     .help = "If molstar_adaptbx/../molstar' does not exist, try to clone it"
+
+  skip_env_if_present = True
+    .type = bool
+    .help = "If the 'molstar_env_name' exists as a conda environment, skip creation"
+    
+  copy_to_molstar = True
+    .type = bool
+    .help = "Whether or not to copy files from adaptbx to molstar"
 
   molstar_remote = git@github.com:molstar/molstar.git
     .type = str
@@ -39,70 +45,85 @@ class Program(ProgramTemplate):
 
   def run(self):
 
-    # First check if the molstar repo exists in the expeected locaion (one level up from adaptbx)
+    # First check if the molstar repo exists in the expeected locaion 
+    # (one level up from adaptbx)
     adaptbx_dir = Path(__file__).parent.parent
     molstar_dir = adaptbx_dir.parent / "molstar"
     env_name = self.params.molstar_env_name
 
-        
-
     if not molstar_dir.exists():
       if self.params.clone_molstar_repo:
         command = f"git clone {self.params.molstar_remote} ../molstar"
+        self._print(command)
+        run_command(command,print_func=self._print)
       else:
         self._print("ERROR: the molstar git repo not found")
         return
     
-    # If directory exists, assume it is the correct git repo. Copy files there:
-    adaptbx_viewer_dir = adaptbx_dir / "molstar/src/apps/phenix-viewer"
-    molstar_viewer_dir = molstar_dir / "src/apps/phenix-viewer"
-    self._print(f"Will copy phenix plugin directory:")
-    self._print(f"\tfrom: {adaptbx_viewer_dir }")
-    self._print(f"\tto: {molstar_viewer_dir}")
-    if molstar_viewer_dir.exists():
-      self._print("Destination exists, removing...")
-      shutil.rmtree(molstar_viewer_dir)
-    self._print("Copying...")
-    shutil.copytree(adaptbx_viewer_dir, molstar_viewer_dir)
-    self._print("Done.\n\n")
+    # If directory exists, assume it is the correct git repo. 
+    #  Copy phenix specific folders and files there:
 
-    # install js dependencies, build typescript
+    # Folders
+    src_prefix = adaptbx_dir / "molstar"
+    dst_prefix = molstar_dir
+    files = [
+      "src/apps/phenix-viewer/app.ts",
+      "src/apps/phenix-viewer/favicon.ico",
+      "src/apps/phenix-viewer/helpers.ts",
+      "src/apps/phenix-viewer/index.html",
+      "src/apps/phenix-viewer/index.ts",
+      "src/apps/phenix-viewer/phenix.ts",
+      "src/phenix/server.js",
+      "webpack.config.js",
+      "webpack.config.production.js",
+      "webpack.config.viewer.js",
+      "scripts/deploy.js",
+    ]
+    for file in files:
+      src = src_prefix / file
+      dst = dst_prefix / file
+      self._print(f"Copying file: {file}")
+      self._print(f"\tSrc: {src}")
+      self._print(f"\tDst: {dst}")
+      dst.parent.mkdir(exist_ok=True,parents=True)
+      shutil.copy(src, dst)
+    self._print("Done.\n\n")
+    
+    # Install js dependencies
+    #   1. Create a new conda env to get high nodejs versions
+    #   2. Install nodejs
+    #   3. run a series of npm commands using the conda nodejs
     self._print("Building molstar...")
     
-    packages = [
-      '"nodejs>=20"', # system nodejs version is likely to be too low
-    ]
-    # Create a fresh conda env to avoid dependency issues
-    create_conda_env(env_name)
-    env_dir = get_conda_env_directory(env_name)
-    for package in packages:
-      install_package_in_env(env_name, package)
+    # Check if env name exists
+    env_dir =  get_conda_env_directory(env_name,print_func=self._print)
+    env_present = env_dir is not None
+    if env_present and self.params.skip_env_if_present:
+      create_env = False
+    else:
+      create_env = True
+
+    if create_env:
+      packages = [
+        '"nodejs>=20"', # system nodejs version is likely to be too low
+      ]
+      # Create a fresh conda env to avoid dependency issues
+      create_conda_env(env_name)
+      env_dir = get_conda_env_directory(env_name,print_func=self._print)
+      for package in packages:
+        install_package_in_env(env_name, package,print_func=self._print)
 
     # Install nodejs dependencies
     npm_bin_path = f"{env_dir}/bin/npm"
     commands = [ 
         f"{npm_bin_path} install -g http-server --prefix {env_dir}", # -g for global is important
         f"{npm_bin_path} install --prefix {molstar_dir}",
+        f"{npm_bin_path} run clean --prefix {molstar_dir}",
         f"{npm_bin_path} run build --prefix {molstar_dir}",
     ] 
     for command in commands:
-      run_command_in_env(env_name, command)
-
-    # Write a config file (subsequent viewer starts will look for this file)
-    config = {
-      "molstar_env_name":env_name,
-      "molstar_build_dir":str(molstar_dir)
-      }
-    with Path(adaptbx_dir,"phenix","config.json").open("w") as f:
-      json.dump(config,f,indent=2)
+      run_command_in_env(env_name, command,print_func=self._print)
     self._print("Done.\n\n")
-
-    # Start molstar
-    command = f"{env_dir}/bin/http-server {molstar_viewer_dir}"
-    print('starting molstar:')
-    print(command)
-    run_command(command)
-
 
 
   def get_results(self):

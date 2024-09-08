@@ -2,18 +2,32 @@ from __future__ import absolute_import, division, print_function
 import subprocess
 import sys
 
+import code
 from phenix.program_template import ProgramTemplate
 from libtbx import group_args
 import mmtbx
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
-from qttbx.viewers.gui.view.apps.molstar_base_app import MolstarBaseAppView
-from qttbx.viewers.gui.controller.apps.molstar_base_app import MolstarBaseAppController
-from qttbx.viewers.gui.model.state import State
-
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import QApplication
-QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+from molstar_adaptbx.phenix.molstar import MolstarGraphics
 # =============================================================================
+
+
+banner = """
+**************************************************************
+*    Welcome to the Phenix - Molstar interactive viewer      *
+**************************************************************
+*                                                            *
+* Use Python to interact with molstar:                       *
+*   - 'self': the CCTBX program template instance            *
+*   - 'self.data_manager.get_model()': get the MMTBX model   *
+*   - 'self.viewer': the CCTBX model viewer instance         *
+*   - 'self.viewer.select_all()': send a command to molstar  *
+*                                                            *
+* Type 'exit()' or press Ctrl+D to quit.                     *
+**************************************************************
+
+Interactive session starting...
+"""
+
 
 class Program(ProgramTemplate):
 
@@ -45,20 +59,8 @@ class Program(ProgramTemplate):
 
   def run(self):
 
-    # start app
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
-    app = QApplication(sys.argv)
+    self.viewer = MolstarGraphics(dm=self.data_manager)
+    self.viewer.start_viewer()
 
-    # get icon
-    #icon_path =  Path(__file__).parent / '../view/assets/icons/phenix/icon.icns'
-    #icon = QIcon(str(icon_path))
-    #qapp.setWindowIcon(icon)
-    
-    # Core top level object initialization
-    self.state = State(self.data_manager,params=self.params)
-    self.view = MolstarBaseAppView()
-    self.controller = MolstarBaseAppController(parent=self.state,view=self.view)
-
-    # Start
-    self.controller.view.show()
-    sys.exit(app.exec_())
+    # Start interactive shell
+    code.interact(banner=banner,local=locals())
