@@ -9,7 +9,8 @@ import { Color } from '../../mol-util/color';
 import { ParamDefinition } from '../../mol-util/param-definition';
 import { CreateVolumeStreamingBehavior, CreateVolumeStreamingInfo } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
 import { PhenixViewer } from './app';
-import { getLocationArray, phenixSelFromLoci, TwoWayDictionary, PhenixStateClass} from './helpers';
+import { MolstarState } from './api';
+import { getLocationArray, phenixSelFromLoci, TwoWayDictionary} from './helpers';
 import {  PhenixReferenceClass, PhenixStructureClass, PhenixComponentClass, PhenixRepresentationClass} from './helpers';
 import { StructureSelectionQuery } from '../../mol-plugin-state/helpers/structure-selection-query';
 import { StateSelection } from '../../mol-state';
@@ -308,12 +309,13 @@ export namespace Phenix {
     //       }
 
 
-    export function getState(this: PhenixViewer) {
-        // // @ts-ignore
-        // result.hasSynced = this.hasSynced;
-        return JSON.stringify(this.phenixState); // debug
+    // export function getState(this: PhenixViewer) {
+    //     // // @ts-ignore
+    //     // result.hasSynced = this.hasSynced;
+    //     this.phenixState.connection_id = this.connection_id
+    //     return JSON.stringify(this.phenixState); // debug
 
-    }
+    // }
     export function queryFromExpression(this:PhenixViewer,selection_expression: any){
         const selectionQuery = StructureSelectionQuery('Phenix Query',selection_expression)
         return selectionQuery
@@ -509,7 +511,7 @@ export namespace Phenix {
         // this.refMapping_volume = {};
         this.objectStorageMolstar = new TwoWayDictionary();
         this.objectStoragePhenix = new TwoWayDictionary();
-        this.phenixState = new PhenixStateClass();
+        this.phenixState = new MolstarState();
         this.hasSynced = true;
         // this.hasVolumes = false;
     }

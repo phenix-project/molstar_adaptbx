@@ -180,12 +180,13 @@ class Reference(ApiClass):
 
 @dataclass
 class MolstarState(ApiClass):
+  connection_id: str # A unique id for each adapter connection
   has_synced: bool
   references: List[Reference]
 
   @classmethod
-  def from_empty(cls):
-    return cls(references="ref placeholder",has_synced=False)
+  def from_empty(cls,connection_id=""):
+    return cls(references=[],has_synced=False,connection_id=connection_id)
 
   # @classmethod
   # def from_dict_old(cls,state_dict):

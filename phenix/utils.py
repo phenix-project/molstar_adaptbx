@@ -34,7 +34,7 @@ def create_conda_env(env_name,print_func=print):
   print_func(f"Creating a new environment '{env_name}'...")
   run_command(f"conda create --name {env_name} -y",print_func=print_func)
 
-def install_package_in_env(env_name, package_name):
+def install_package_in_env(env_name, package_name,print_func=print):
   """Install the desired package in a conda environment."""
   print_func(f"Installing package '{package_name}' in environment '{env_name}'...")
   run_command(f"conda install --name {env_name} {package_name} -y",print_func=print_func)

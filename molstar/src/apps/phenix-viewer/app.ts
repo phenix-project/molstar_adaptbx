@@ -19,7 +19,7 @@ import { SaccharideCompIdMapType } from '../../mol-model/structure/structure/car
 // Start import modifications
 import { MolScriptBuilder as MS} from '../../mol-script/language/builder';
 import {  StructureSelectionQuery, StructureSelectionQueries } from '../../mol-plugin-state/helpers/structure-selection-query'
-import { TwoWayDictionary, PhenixStateClass } from './helpers';
+import { TwoWayDictionary } from './helpers';
 import { StructureProperties as Props, StructureProperties } from '../../mol-model/structure';
 import { VolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/behavior';
 import { StateSelection } from '../../mol-state';
@@ -32,7 +32,7 @@ import { StateBuilder, StateObjectSelector } from '../../mol-state';
 import { Phenix } from './phenix';
 import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/representation';
 import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
-import { Request } from './api';
+import { Request, MolstarState } from './api';
 import { PluginContext } from '../../mol-plugin/context';
 
 
@@ -67,6 +67,9 @@ const DefaultViewerOptions = {
 type ViewerOptions = typeof DefaultViewerOptions;
 
 export class PhenixViewer {
+    // Attributes
+    connection_id: string | undefined = undefined; // to record if the python viewer has connected
+
     // make some library components available for debugging
     Props = Props;
     StructureElement = StructureElement;
@@ -93,7 +96,7 @@ export class PhenixViewer {
     hasSynced = false;
     hasVolumes = false;
     isFocused = false;
-    phenixState = new PhenixStateClass();
+    phenixState = new MolstarState();
     currentSelExpression: any;
     StateObjectSelector = StateObjectSelector;
     MS = MS;
@@ -125,7 +128,7 @@ export class PhenixViewer {
         postInit: Phenix.postInit.bind(this),
         loadStructureFromPdbString: Phenix.loadStructureFromPdbString.bind(this),
         generateUniqueKey: Phenix.generateUniqueKey.bind(this),
-        getState: Phenix.getState.bind(this),
+        //getState: Phenix.getState.bind(this),
         setState: Phenix.setState.bind(this),
         updateFromExternal: Phenix.updateFromExternal.bind(this),
         getSel: Phenix.getSel.bind(this),
@@ -158,14 +161,19 @@ export class PhenixViewer {
 
     };
     async process_request(data: string): Promise<any> {
-        // @ts-ignore
-        const request = Request.fromJSON(data);
-      
-        // Wrap the result of run() in a Promise to handle both sync and async cases
-        const output = await Promise.resolve(request.data.run(this));
-      
-        return output;
-    }
+        try {
+            // Assume Request.fromJSON is defined elsewhere
+            const request = Request.fromJSON(data);
+
+            // Process the request (handle both sync and async cases)
+            const output = await Promise.resolve(request.data.run(this));
+
+            return output;  // Return the successful output
+        } catch (error) {
+            // Return an error message if something went wrong
+            return { error: error.message || 'Unknown error' };
+        }
+        }
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
 
         const definedOptions = {} as any;

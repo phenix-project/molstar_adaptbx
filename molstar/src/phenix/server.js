@@ -40,19 +40,69 @@ app.get('/events', (req, res) => {
   });
 });
 
-// Handle POST request and forward the data to all connected clients via SSE (no response required)
 function handlePostRequest(req, res) {
   const payload = req.body;  // Receive the JSON payload (action and args)
 
-  // Broadcast the payload to all connected clients
+  // Broadcast the payload to all connected SSE clients
   clients.forEach(client => {
     client.write(`data: ${JSON.stringify(payload)}\n\n`);
   });
 
-  // Respond to the client that sent the POST request
-  res.json({ success: true, message: 'Request forwarded to all clients' });
-}
+  // Track responses from WebSocket clients
+  const responses = [];
+  const totalClients = wsClients.size;
+  let completedClients = 0;
 
+  // Set a timeout to ensure we don't wait indefinitely for responses
+  const timeoutDuration = 5000;  // Timeout after 5 seconds
+  const timeout = setTimeout(() => {
+    // Respond to the HTTP client after the timeout, including partial results
+    res.json({
+      success: false,
+      message: 'Timeout waiting for some clients to respond',
+      responses: responses,  // Return the partial responses we got
+      failedClients: totalClients - completedClients  // Report number of clients that didn't respond
+    });
+  }, timeoutDuration);
+
+  // Broadcast the payload to all WebSocket clients and wait for their responses
+  wsClients.forEach((ws, clientId) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(payload));
+
+      // Listen for a response from the WebSocket client
+      ws.once('message', (message) => {
+        const data = JSON.parse(message);
+        responses.push({ clientId, data });
+        completedClients++;
+
+        // Check if all clients have responded before the timeout
+        if (completedClients === totalClients) {
+          clearTimeout(timeout);  // Clear the timeout if all clients responded
+          res.json({
+            success: true,
+            message: 'All clients responded',
+            responses: responses
+          });
+        }
+      });
+    } else {
+      // Handle the case where the WebSocket connection is not open
+      responses.push({ clientId, error: 'WebSocket not open' });
+      completedClients++;
+
+      // If all clients have responded (or failed), return the response early
+      if (completedClients === totalClients) {
+        clearTimeout(timeout);  // Clear the timeout if all clients responded
+        res.json({
+          success: true,
+          message: 'Some clients failed to respond, but continuing',
+          responses: responses
+        });
+      }
+    }
+  });
+}
 app.post('/action', handlePostRequest);
 
 // WebSocket Server for receiving responses from clients
@@ -69,7 +119,7 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (message) => {
     const data = JSON.parse(message);
-    console.log('Received data from client:', data);
+    //console.log('Received data from client:', data);
     ws.emit('response', data);  // Emit response event to resolve request
   });
 

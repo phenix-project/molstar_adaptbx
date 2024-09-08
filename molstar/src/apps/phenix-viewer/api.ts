@@ -1,4 +1,5 @@
 import { PhenixViewer } from './app';
+import { PhenixReference } from './helpers';
 
 // Base class for handling JSON serialization and deserialization
 export class ApiClass {
@@ -96,19 +97,32 @@ export class RawJS extends ApiClass {
 }
 
 // State class for defining/communicating internal state
-export class MolstarState extends ApiClass {
-  has_synced: boolean = false;
-  references: string = "references list"
 
-  constructor(has_synced: boolean, references: string) {
+
+export class MolstarState extends ApiClass {
+  connection_id: string | undefined = undefined;
+  has_synced: boolean = false;
+  references: PhenixReference[] = []
+
+  constructor(has_synced: boolean = false, references: PhenixReference[] = []) {
     super("MolstarState");
     this.has_synced = has_synced
     this.references = references
   }
+  hasPhenixReferenceKey(phenixReferenceKey: string): boolean {
+    for (const reference of this.references) {
+      if (reference.phenixKey === phenixReferenceKey) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   run(viewer: PhenixViewer) {
-    const json = viewer.phenix.getState()
-    return json
+    // If we can set connection_id and return the value, 
+    //   then the molstar web app is sufficiently set up
+    viewer.phenixState.connection_id = this.connection_id
+    return viewer.phenixState.toJSON()
   }
 }
 

@@ -89,28 +89,6 @@ export function queryFromLoci(this:any, loci: Loci): SelectionQuery {
 }
 
 // 'Dataclasses'
-export interface PhenixState {
-  references:  PhenixReference[]
-  has_synced: false | boolean;
-}
-
-export class PhenixStateClass implements PhenixState {
-  references: PhenixReference[] = []
-  has_synced: false | boolean = false;
-
-  constructor() {
-  }
-
-  hasPhenixReferenceKey(phenixReferenceKey: string): boolean {
-    for (const reference of this.references) {
-      if (reference.phenixKey === phenixReferenceKey) {
-        return true;
-      }
-    }
-    return false;
-  }
-}
-
 
 export interface PhenixReference {
   molstarKey: string | boolean;

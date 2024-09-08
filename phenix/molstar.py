@@ -40,6 +40,7 @@ class MolstarGraphics(ModelViewer):
     self.web_view = web_view
     self.dm = dm
     self.loaded = {}
+    self.connection_id = generate_uuid()
 
     self.log_list = []
     self.debug = True
@@ -392,13 +393,15 @@ class MolstarGraphics(ModelViewer):
 
   # ---------------------------------------------------------------------------
   # Synchronization
+
   def sync_remote(self):
-    molstar_state = MolstarState.from_empty()
+    print("Syncing....")
+    molstar_state = MolstarState.from_empty(connection_id=self.connection_id)
     req = Request(data=molstar_state)
     # Send the POST request with the JSON data
     response = requests.post(self.url_api, json=req.to_dict())
     try:
-      response_json = json.loads(response.json()["responses"][0]["output"])
+      response_json = json.loads(response.json()["responses"][0]["data"]["output"])
       molstar_state = MolstarState.from_json(response_json)
       return molstar_state
     except:
