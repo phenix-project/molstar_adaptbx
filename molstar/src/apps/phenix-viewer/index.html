@@ -66,12 +66,21 @@
 
             // console.log('Available extensions: ', Object.keys(molstar.ExtensionMap));
 
-            // Phenix commands server
+            // Ser up Phenix commands server
+            // Get the current protocol, hostname, and port dynamically
+            const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+            const hostname = window.location.hostname;
+            const port = window.location.port ? `:${window.location.port}` : '';  // Include port if available
+
+            // Dynamically construct the URL for SSE and WebSocket
+            const sseUrl = `${window.location.origin}/events`;  // Uses the same protocol, hostname, and port
+            const wsUrl = `${protocol}${hostname}${port}`;  // Dynamically use wss or ws based on the protocol
+
             // Connect to the server's SSE endpoint
-            const eventSource = new EventSource('http://localhost:3000/events');
+            const eventSource = new EventSource(sseUrl);
 
             // Set up WebSocket connection to the server
-            const ws = new WebSocket('ws://localhost:3000');
+            const ws = new WebSocket(wsUrl);
 
             // Function that handles incoming messages via SSE
             eventSource.onmessage = function(event) {

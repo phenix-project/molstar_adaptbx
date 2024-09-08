@@ -2,7 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const WebSocket = require('ws');
 const app = express();
-const port = 3000;
+
+// Get the port from the command line argument (default to 3000 if not provided)
+const args = process.argv.slice(2);
+const portIndex = args.indexOf('--port');
+const port = portIndex !== -1 && args[portIndex + 1] ? parseInt(args[portIndex + 1], 10) : 3000;
 
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));

@@ -8,6 +8,7 @@ from libtbx import group_args
 import mmtbx
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
 from molstar_adaptbx.phenix.molstar import MolstarGraphics
+from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
 # =============================================================================
 
 
@@ -40,10 +41,13 @@ class Program(ProgramTemplate):
 
   master_phil_str = """
 
-  rest_server_port = 5000
+  view_server_port = 5000
     .type = int
-    .help = "The port for http control"
+    .help = "The port for viewing molstar"
 
+  allow_port_change = True
+    .type = bool
+    .help = "If first choice port is occupied, change to another open port"
     include scope mmtbx.monomer_library.pdb_interpretation.grand_master_phil_str
 
   """
@@ -58,8 +62,22 @@ class Program(ProgramTemplate):
 
 
   def run(self):
+    # Set up a server to serve the molstar app
+    view_server = NodeHttpServer([
+      "/Users/user/software/miniforge3/envs/molstar_env/bin/http-server",
+      "/Users/user/software/debug/modules/molstar/build/phenix-viewer"
+    ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
-    self.viewer = MolstarGraphics(dm=self.data_manager)
+    # Set up a server to expose the api
+    api_server = NodeHttpServer([
+       "/Users/user/software/miniforge3/envs/molstar_env/bin/node",
+       "/Users/user/software/debug/modules/molstar/src/phenix/server.js",
+    ],port=view_server.port)
+    self.viewer = MolstarGraphics(
+      dm=self.data_manager,
+      view_server = view_server,
+      api_server = api_server
+    )
     self.viewer.start_viewer()
 
     # Start interactive shell

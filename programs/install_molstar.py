@@ -75,6 +75,7 @@ class Program(ProgramTemplate):
       "src/apps/phenix-viewer/api.ts",
       "src/apps/phenix-viewer/phenix.ts",
       "src/phenix/server.js",
+      "package.json",
       "webpack.config.js",
       "webpack.config.production.js",
       "webpack.config.viewer.js",
@@ -126,6 +127,15 @@ class Program(ProgramTemplate):
       run_command_in_env(env_name, command,print_func=self._print)
     self._print("Done.\n\n")
 
+
+    # Installation config file
+    config = {
+      "node_executable":node_bin_path,
+      "molstar_build_dir":molstar_build_dir,
+    }
+    config_path = Path(__file__).parent.parent / "config.json"
+    with config_path.open("w") as fh:
+      json.dump(config,fh,indent=2)
 
   def get_results(self):
     pass

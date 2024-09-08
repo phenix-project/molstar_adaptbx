@@ -16,8 +16,6 @@ from qttbx.viewers import ModelViewer
 
 from libtbx.utils import Sorry
 from libtbx import group_args
-
-from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
 from molstar_adaptbx.phenix.utils import generate_uuid
 from molstar_adaptbx.phenix.api import ApiClass, Request,RawJS, MolstarState
 
@@ -29,22 +27,19 @@ class MolstarGraphics(ModelViewer):
   The Python interface for the molstar viewer.
   """
   viewer_name = 'Molstar'
-  config_default = {
-    "molstar_env_name":"molstar_env",
-    "molstar_build_dir":str(Path(__file__).parent / "../../molstar/build/phenix-viewer")
-    }
 
-  def __init__(self,web_view=None,dm=None,config=None):
-    ModelViewer.__init__(self)
-    if not config:
-      config = self.config_default.copy()
-    self.config = config
-    self.molstar_build_dir = config["molstar_build_dir"]
-    self.molstar_env_name = config["molstar_env_name"]
-    self.api_url = 'http://localhost:3000/api-request'
+
+  def __init__(self,
+      web_view=None,
+      dm=None,
+      api_server=None,
+      view_server = None,
+      ):
+    super().__init__()
+    self.api_server= api_server  # Exposes the api over http
+    self.view_server = view_server # Serves the molstar app
     self.plugin_prefix="viewer"
     self.web_view = web_view
-    self.state = group_args(molstarState=None)
     self.dm = dm
     self.loaded = {}
 
@@ -136,28 +131,31 @@ class MolstarGraphics(ModelViewer):
     #   self.log()
 
 
-    # Start node http-server
-    self.log()
-    self.log('-'*79)
-    self.log('Starting HTTP server for Molstar')
-    self.command = self.find_viewer()
-    self.view_server = NodeHttpServer(self.command)
-    self.view_server.start()
-    self.command = self.view_server.command
-    self.port = self.view_server.port
-    self.url = self.view_server.url
-    #subprocess.run(self.api_server_command)
-    # Set url on web view
+    # Start node api server
+    if self.api_server:
+      self.log()
+      self.log('-'*79)
+      self.log('Starting API server for Molstar')
+      self.api_server.start()
 
+    # Start node http-server
+    if self.view_server:
+      self.log()
+      self.log('-'*79)
+      self.log('Starting HTTP server for Molstar')
+      self.view_server.start()
+      self.command = self.view_server.command
+      self.port = self.view_server.port
+      self.url = self.view_server.url
+    
+    # Set url on web view
     if not self.web_view:
-      time.sleep(3)
+      time.sleep(2)
       # open in browser
       webbrowser.open(self.url)
     else:
       # open in qt web view
       self.web_view.setUrl(QUrl(self.url))
-
-
       counter = 0
       while counter<timeout:
         self._check_status()
@@ -205,7 +203,7 @@ class MolstarGraphics(ModelViewer):
 
   def send_request(self,request: Request):
     # Send the POST request with the JSON data
-    response = requests.post(self.api_url, json=request.to_dict())
+    response = requests.post(self.api_server.url, json=request.to_dict())
     d = response.json()
     if isinstance(d,dict) and  "responses" in d:
       try:      
@@ -396,7 +394,7 @@ class MolstarGraphics(ModelViewer):
     molstar_state = MolstarState.from_empty()
     req = Request(data=molstar_state)
     # Send the POST request with the JSON data
-    response = requests.post(self.api_url, json=req.to_dict())
+    response = requests.post(self.api_server.url, json=req.to_dict())
     response_json = json.loads(response.json()["responses"][0]["output"])
     molstar_state = MolstarState.from_json(response_json)
     return molstar_state
