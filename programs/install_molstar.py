@@ -72,6 +72,7 @@ class Program(ProgramTemplate):
       "src/apps/phenix-viewer/helpers.ts",
       "src/apps/phenix-viewer/index.html",
       "src/apps/phenix-viewer/index.ts",
+      "src/apps/phenix-viewer/api.ts",
       "src/apps/phenix-viewer/phenix.ts",
       "src/phenix/server.js",
       "webpack.config.js",
