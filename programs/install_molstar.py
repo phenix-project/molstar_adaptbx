@@ -44,7 +44,7 @@ class Program(ProgramTemplate):
     pass
 
   def run(self):
-
+    self._print("Being installation...")
     # First check if the molstar repo exists in the expeected locaion 
     # (one level up from adaptbx)
     adaptbx_dir = Path(__file__).parent.parent
@@ -126,16 +126,6 @@ class Program(ProgramTemplate):
     for command in commands:
       run_command_in_env(env_name, command,print_func=self._print)
     self._print("Done.\n\n")
-
-
-    # Installation config file
-    config = {
-      "node_executable":node_bin_path,
-      "molstar_build_dir":molstar_build_dir,
-    }
-    config_path = Path(__file__).parent.parent / "config.json"
-    with config_path.open("w") as fh:
-      json.dump(config,fh,indent=2)
 
   def get_results(self):
     pass

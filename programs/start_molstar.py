@@ -1,12 +1,13 @@
 from __future__ import absolute_import, division, print_function
 import subprocess
 import sys
-
+from pathlib import Path
 import code
 from phenix.program_template import ProgramTemplate
 from libtbx import group_args
 import mmtbx
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
+from molstar_adaptbx.phenix.utils import get_conda_env_directory
 from molstar_adaptbx.phenix.molstar import MolstarGraphics
 from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
 # =============================================================================
@@ -63,20 +64,25 @@ class Program(ProgramTemplate):
 
   def run(self):
     # Set up a server to serve the molstar app
-    view_server = NodeHttpServer([
-      "/Users/user/software/miniforge3/envs/molstar_env/bin/http-server",
-      "/Users/user/software/debug/modules/molstar/build/phenix-viewer"
+    env_name = "molstar_env"
+    env_dir = get_conda_env_directory(env_name)
+
+
+    env_bin_dir = f"{env_dir}/bin"
+    molstar_install_dir = str(Path(__file__).parent.parent / "molstar")
+    server = NodeHttpServer([
+      f"{env_bin_dir}/http-server",
+      f"{molstar_install_dir}/build/phenix-viewer"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
-    # Set up a server to expose the api
-    api_server = NodeHttpServer([
-       "/Users/user/software/miniforge3/envs/molstar_env/bin/node",
-       "/Users/user/software/debug/modules/molstar/src/phenix/server.js",
-    ],port=view_server.port)
+    # # Set up a server to expose the api
+    # api_server = NodeHttpServer([
+    #    f"{env_bin_dir}/node",
+    #    f"{molstar_install_dir}/src/phenix/server.js",
+    # ],port=view_server.port)
     self.viewer = MolstarGraphics(
       dm=self.data_manager,
-      view_server = view_server,
-      api_server = api_server
+      server = server,
     )
     self.viewer.start_viewer()
 

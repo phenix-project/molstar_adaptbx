@@ -1,18 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const WebSocket = require('ws');
+const path = require('path');
 const app = express();
 
 // Get the port from the command line argument (default to 3000 if not provided)
 const args = process.argv.slice(2);
 const portIndex = args.indexOf('--port');
 const port = portIndex !== -1 && args[portIndex + 1] ? parseInt(args[portIndex + 1], 10) : 3000;
-
+console.log("Port:",port)
 app.use(cors());
 app.use(express.json({ limit: '100mb' }));
 
 const clients = [];  // SSE clients
 const wsClients = new Map();  // WebSocket clients
+
+// Serve static files from 'molstar/build/phenix-viewer'
+const staticPath = path.join(__dirname, '../../build/phenix-viewer');
+app.use(express.static(staticPath));
+
+// Add a route for serving the index.html file
+app.get('/', (req, res) => {
+  res.sendFile(path.join(staticPath, 'index.html'));  // Make sure index.html exists in the static folder
+});
 
 // SSE Endpoint for sending data to connected clients
 app.get('/events', (req, res) => {
@@ -46,9 +56,12 @@ function handlePostRequest(req, res) {
 app.post('/action', handlePostRequest);
 
 // WebSocket Server for receiving responses from clients
-const wss = new WebSocket.Server({ noServer: true });
+const server = app.listen(port, () => {
+  console.log(`Server running on http://localhost:${port}`);
+});
 
-// Handle WebSocket connection
+const wss = new WebSocket.Server({ server });
+
 wss.on('connection', (ws) => {
   // Assign a unique identifier to the client (you could use something more robust in real scenarios)
   const clientId = Date.now();
@@ -63,56 +76,5 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     wsClients.delete(clientId);
     console.log('WebSocket client disconnected');
-  });
-});
-
-// Handle POST request that requires a response from clients via WebSocket
-app.post('/api-request', (req, res) => {
-  const payload = req.body;  // Receive the JSON payload (action and args)
-
-  // Track responses from clients
-  const responses = [];
-  const totalClients = wsClients.size;
-
-  // Broadcast the payload to all connected clients using SSE
-  clients.forEach(client => {
-    client.write(`data: ${JSON.stringify(payload)}\n\n`);
-  });
-
-  // Set a timeout in case some clients don't respond in time
-  const timeout = setTimeout(() => {
-    res.json({
-      success: false,
-      message: 'Timeout waiting for clients to respond',
-      responses
-    });
-  }, 5000);  // 5 seconds timeout
-
-  // Listen for responses from WebSocket clients
-  wsClients.forEach((ws, clientId) => {
-    ws.once('response', (data) => {
-      responses.push(data);
-
-      // If all clients have responded, return the response and clear the timeout
-      if (responses.length === totalClients) {
-        clearTimeout(timeout);  // Clear the timeout if all responses are received
-        res.json({
-          success: true,
-          message: 'Request forwarded to all clients and responses received',
-          responses
-        });
-      }
-    });
-  });
-});
-
-// Upgrade the HTTP server to handle WebSocket connections
-const server = app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
-});
-
-server.on('upgrade', (request, socket, head) => {
-  wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit('connection', ws, request);
   });
 });

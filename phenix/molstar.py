@@ -32,12 +32,10 @@ class MolstarGraphics(ModelViewer):
   def __init__(self,
       web_view=None,
       dm=None,
-      api_server=None,
-      view_server = None,
+      server=None,
       ):
     super().__init__()
-    self.api_server= api_server  # Exposes the api over http
-    self.view_server = view_server # Serves the molstar app
+    self.server= server  # Exposes the api over http
     self.plugin_prefix="viewer"
     self.web_view = web_view
     self.dm = dm
@@ -132,21 +130,21 @@ class MolstarGraphics(ModelViewer):
 
 
     # Start node api server
-    if self.api_server:
+    if self.server:
       self.log()
       self.log('-'*79)
       self.log('Starting API server for Molstar')
-      self.api_server.start()
+      self.server.start()
 
     # Start node http-server
-    if self.view_server:
+    if self.server:
       self.log()
       self.log('-'*79)
       self.log('Starting HTTP server for Molstar')
-      self.view_server.start()
-      self.command = self.view_server.command
-      self.port = self.view_server.port
-      self.url = self.view_server.url
+      self.server.start()
+      self.command = self.server.command
+      self.port = self.server.port
+      self.url = self.server.url
     
     # Set url on web view
     if not self.web_view:
@@ -189,7 +187,7 @@ class MolstarGraphics(ModelViewer):
 
 
   def close_viewer(self):
-    self.view_server.stop()
+    self.server.stop()
     if hasattr(self,"volume_streamer"):
       self.volume_streamer.stop_server()
     self.log('='*79)
@@ -203,7 +201,7 @@ class MolstarGraphics(ModelViewer):
 
   def send_request(self,request: Request):
     # Send the POST request with the JSON data
-    response = requests.post(self.api_server.url, json=request.to_dict())
+    response = requests.post(self.server.url, json=request.to_dict())
     d = response.json()
     if isinstance(d,dict) and  "responses" in d:
       try:      
@@ -394,7 +392,7 @@ class MolstarGraphics(ModelViewer):
     molstar_state = MolstarState.from_empty()
     req = Request(data=molstar_state)
     # Send the POST request with the JSON data
-    response = requests.post(self.api_server.url, json=req.to_dict())
+    response = requests.post(self.server.url, json=req.to_dict())
     response_json = json.loads(response.json()["responses"][0]["output"])
     molstar_state = MolstarState.from_json(response_json)
     return molstar_state
