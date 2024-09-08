@@ -153,7 +153,7 @@ class MolstarGraphics(ModelViewer):
       webbrowser.open(self.url)
     else:
       # open in qt web view
-      self.web_view.setUrl(QUrl(self.url))
+      self.web_view.set_url(self.url)
 
     # Wait until ready
     counter = 0
@@ -392,11 +392,17 @@ class MolstarGraphics(ModelViewer):
 
   # ---------------------------------------------------------------------------
   # Synchronization
-  def sync_remote(self,callback=None,verbose=True):
+  def sync_remote(self):
     molstar_state = MolstarState.from_empty()
     req = Request(data=molstar_state)
     # Send the POST request with the JSON data
     response = requests.post(self.url_api, json=req.to_dict())
-    response_json = json.loads(response.json()["responses"][0]["output"])
-    molstar_state = MolstarState.from_json(response_json)
-    return molstar_state
+    try:
+      response_json = json.loads(response.json()["responses"][0]["output"])
+      molstar_state = MolstarState.from_json(response_json)
+      return molstar_state
+    except:
+      self.log("Reponse text:")
+      self.log(response.text)
+      return None
+      #raise ValueError("Keyword 'responses' not present in response json")

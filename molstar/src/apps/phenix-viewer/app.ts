@@ -157,11 +157,14 @@ export class PhenixViewer {
         syncReferences: Phenix.syncReferences.bind(this),
 
     };
-    process_request(data: string) {
+    async process_request(data: string): Promise<any> {
         // @ts-ignore
-        const request = Request.fromJSON(data)
-        const output =  (request.data.run(this) as unknown)
-        return output
+        const request = Request.fromJSON(data);
+      
+        // Wrap the result of run() in a Promise to handle both sync and async cases
+        const output = await Promise.resolve(request.data.run(this));
+      
+        return output;
     }
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
 

@@ -83,24 +83,28 @@
             const ws = new WebSocket(wsUrl);
 
             // Function that handles incoming messages via SSE
-            eventSource.onmessage = function(event) {
-            // Pass on the event to the viewer. event.data is the JSON string
-            const output = window.viewer.process_request(event.data);
-            
-            // After processing the event, send a response back to the server via WebSocket
-            const responseData = {
-                status: 'Processed event',
-                output: JSON.stringify(output)  // Add more details if needed
-            };
+            eventSource.onmessage = async function(event) {
+                try {
+                    // Process the incoming event (assuming process_request is now asynchronous)
+                    const output = await window.viewer.process_request(event.data);
 
-            // Make sure WebSocket connection is open before sending
-            if (ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify(responseData));
-            } else {
-                ws.addEventListener('open', () => {
-                ws.send(JSON.stringify(responseData));
-                });
-            }
+                    // Prepare the response to send back via WebSocket
+                    const responseData = {
+                        status: 'Processed event',
+                        output: JSON.stringify(output),  // Send the processed output
+                    };
+
+                    // Send the response back via WebSocket
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify(responseData));
+                    } else {
+                        // Handle case where WebSocket isn't open yet (optional)
+                        console.error('WebSocket is not open');
+                    }
+                } catch (error) {
+                    // Handle errors if any occur during processing
+                    console.error('Error processing request:', error);
+                }
             };
 
             // Optional: Handle WebSocket connection close or error
