@@ -1,0 +1,38 @@
+class afitt_class(SourceModule):
+  module = 'afitt'
+  authenticated = [
+    'scp',
+    '%(cciuser)s@boa.lbl.gov:/net/cci-filer2/raid1/auto_build/externals/'+afitt_version+'.gz']
+
+class molstar_module(SourceModule):
+  module = 'molstar'
+  anonymous = ['git',
+               'git@github.com:molstar/molstar.git',
+               'https://github.com/molstar/molstar.git',
+               ]
+
+# Core CCTBX repositories
+# These must all provide anonymous access.
+class cctbx_module(SourceModule):
+  module = 'cctbx_project'
+  anonymous = ['git',
+               'git@github.com:cctbx/cctbx_project.git',
+               'https://github.com/cctbx/cctbx_project.git',
+               'https://github.com/cctbx/cctbx_project/archive/master.zip']
+
+class molstar_adaptbx_module(SourceModule):
+  module = 'molstar_adaptbx'
+  anonymous = ['git',
+               'git@github.com:phenix-project/molstar_adaptbx.git',
+               'https://github.com/phenix-project/molstar_adaptbx.git',
+               ]
+
+
+
+
+
+class PhenixBuilder(CCIBuilder):
+  HOT = []
+  CODEBASES_EXTRA = [
+    'molstar',
+    'molstar_adaptbx',
