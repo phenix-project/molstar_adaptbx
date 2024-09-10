@@ -20,10 +20,10 @@ banner = """
 **************************************************************
 *                                                            *
 * Use Python to interact with molstar:                       *
+*                                                            *
 *   - 'self': the CCTBX program template instance            *
-*   - 'self.data_manager.get_model()': get the MMTBX model   *
+*                                                            *
 *   - 'self.viewer': the CCTBX model viewer instance         *
-*   - 'self.viewer.select_all()': send a command to molstar  *
 *                                                            *
 * Type 'exit()' or press Ctrl+D to quit.                     *
 **************************************************************

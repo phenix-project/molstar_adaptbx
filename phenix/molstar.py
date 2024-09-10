@@ -237,7 +237,9 @@ class MolstarGraphics(ModelViewer):
 
 
   def load_model(self,filename=None):
-    # Load a model into viewer
+    """
+    Load a model into viewer
+    """
 
     # Store that this model has been loaded
     ref_id = generate_uuid()
@@ -247,10 +249,13 @@ class MolstarGraphics(ModelViewer):
     model = self.dm.get_model(filename=filename)
     model_str = model.model_as_pdb()
 
+    # Create js 
     command =  f"""
     var model_str = `{model_str}`
-    {self.plugin_prefix}.phenix.loadStructureFromPdbString(model_str,'{format}', 'model', '{ref_id}')
+    {self.plugin_prefix}.phenix.loadStructureFromPdbString(model_str,'pdb', 'model', '{ref_id}')
     """
+
+    # Send
     self.send_command(command,sync=False)
 
 
