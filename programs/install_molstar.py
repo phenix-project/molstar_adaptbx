@@ -98,6 +98,7 @@ class Program(ProgramTemplate):
         "webpack.config.production.js",
         "webpack.config.viewer.js",
         "scripts/deploy.js",
+        "src/mol-model-props/computed/interactions/interactions.ts",
       ]
       for file in files:
         src = src_prefix / file

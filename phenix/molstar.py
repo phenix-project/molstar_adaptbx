@@ -201,7 +201,7 @@ class MolstarGraphics(ModelViewer):
 
   @property
   def url_api(self):
-    return self.server.url + "/action"
+    return self.server.url + "/run"
 
   def send_request(self,request: Request):
     # Send the POST request with the JSON data
@@ -232,62 +232,25 @@ class MolstarGraphics(ModelViewer):
     return self.send_request(req)
 
 
-
-    
-
-    # if log_js:
-    #   self.log("JavaScript command:")
-    #   lines = js_command.split("\n")
-    #   self.log("Total Lines: ",len(lines))
-    #   if len(lines)>40:
-    #     lines = lines[:20]+["","...",""]+ lines[-20:]
-    #     js_command_print = "\n".join(lines)
-    #   else:
-    #     js_command_print = js_command
-    #   self.log(js_command_print)
-    #   self.log("Callback:",callback)
-    # if not sync:
-    #   js_command= f"""
-    #   (async () => {{
-    #       {js_command}
-    #   }})();
-    #   """
-    #   result =  self.web_view.runJavaScript(js_command,custom_callback=callback)
-    # else:
-    #   result =  self.web_view.runJavaScriptSync(js_command,custom_callback=callback)
-
-
-    # return result
-
-
   # ---------------------------------------------------------------------------
   # Models
 
-  def _load_model_build_js(self,model_str,format='pdb',label=None,ref_id=None):
-    assert ref_id is not None, 'Cannot load into molstar without defining a Python identifier (ref_id)'
-    assert label is not None, 'Cannot load into molstar without label'
-    js_str = f"""
-    var model_str = `{model_str}`
-    {self.plugin_prefix}.phenix.loadStructureFromPdbString(model_str,'{format}', '{label}', '{ref_id}')
-    """
-    return js_str
 
+  def load_model(self,filename=None):
+    # Load a model into viewer
 
-  def load_model(self,filename=None,ref_id=None):
-    if not ref_id:
-      ref_id = generate_uuid()
-      self.loaded[ref_id] = filename
+    # Store that this model has been loaded
+    ref_id = generate_uuid()
+    self.loaded[ref_id] = filename
 
+    # Serialize as pdb string
     model = self.dm.get_model(filename=filename)
-    format='pdb'
-    label="model"
-    callback=None
+    model_str = model.model_as_pdb()
 
-    func_name = f"model_as_{format}"
-    func = getattr(model,func_name)
-    model_str = func()
-
-    command =  self._load_model_build_js(model_str,format=format,label=label,ref_id=ref_id)
+    command =  f"""
+    var model_str = `{model_str}`
+    {self.plugin_prefix}.phenix.loadStructureFromPdbString(model_str,'{format}', 'model', '{ref_id}')
+    """
     self.send_command(command,sync=False)
 
 

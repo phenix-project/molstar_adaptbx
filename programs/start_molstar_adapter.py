@@ -52,6 +52,9 @@ class Program(ProgramTemplate):
     .help = "If first choice port is occupied, change to another open port"
     include scope mmtbx.monomer_library.pdb_interpretation.grand_master_phil_str
 
+  root_prefix = ""
+   .type = str
+   .help = "If not default value of emtpy string, then the root directory of the molstar install."
   """
 
   def validate(self):
@@ -70,7 +73,10 @@ class Program(ProgramTemplate):
 
 
     env_bin_dir = f"{env_dir}/bin"
-    molstar_install_dir = str(Path(__file__).parent.parent / "molstar")
+    if self.params.root_prefix == "":
+      molstar_install_dir = str(Path(__file__).parent.parent / "molstar")
+    else:
+      molstar_install_dir = self.params.root_prefix
     server = NodeHttpServer([
       f"{env_bin_dir}/node",
       f"{molstar_install_dir}/src/phenix/server.js"

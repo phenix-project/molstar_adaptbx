@@ -35,15 +35,6 @@ export class ApiClass {
   }
 }
 
-// export class Response extends ApiClass {
-//   json: string
-
-// constructor(json: string = '') {
-//   super("Response");
-//   this.json = json;
-// }
-// }
-
 // Request class
 // @ts-ignore
 export class Request extends ApiClass {
@@ -97,8 +88,6 @@ export class RawJS extends ApiClass {
 }
 
 // State class for defining/communicating internal state
-
-
 export class MolstarState extends ApiClass {
   connection_id: string | undefined = undefined;
   has_synced: boolean = false;

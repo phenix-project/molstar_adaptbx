@@ -11,10 +11,17 @@ import { DefaultPluginUISpec, PluginUISpec } from '../../mol-plugin-ui/spec';
 import { PluginCommands } from '../../mol-plugin/commands';
 import { PluginConfig } from '../../mol-plugin/config';
 import { PluginLayoutControlsDisplay } from '../../mol-plugin/layout';
+import { PluginSpec } from '../../mol-plugin/spec';
+
 import { Color } from '../../mol-util/color';
 import { renderReact18 } from '../../mol-plugin-ui/react18';
 import '../../mol-util/polyfill';
 import { SaccharideCompIdMapType } from '../../mol-model/structure/structure/carbohydrates/constants';
+import { MolViewSpec } from '../../extensions/mvs/behavior';
+import { loadMVSX } from '../../extensions/mvs/components/formats';
+import { loadMVS } from '../../extensions/mvs/load';
+import { MVSData } from '../../extensions/mvs/mvs-data';
+import { Task } from '../../mol-task';
 
 // Start import modifications
 import { MolScriptBuilder as MS} from '../../mol-script/language/builder';
@@ -36,6 +43,25 @@ import { Request, MolstarState } from './api';
 import { PluginContext } from '../../mol-plugin/context';
 
 
+export const ExtensionMap = {
+    // 'volseg': PluginSpec.Behavior(Volseg),
+    // 'backgrounds': PluginSpec.Behavior(Backgrounds),
+    // 'dnatco-ntcs': PluginSpec.Behavior(DnatcoNtCs),
+    // 'pdbe-structure-quality-report': PluginSpec.Behavior(PDBeStructureQualityReport),
+    // 'assembly-symmetry': PluginSpec.Behavior(AssemblySymmetry),
+    // 'rcsb-validation-report': PluginSpec.Behavior(RCSBValidationReport),
+    // 'anvil-membrane-orientation': PluginSpec.Behavior(ANVILMembraneOrientation),
+    // 'g3d': PluginSpec.Behavior(G3DFormat),
+    // 'model-export': PluginSpec.Behavior(ModelExport),
+    // 'mp4-export': PluginSpec.Behavior(Mp4Export),
+    // 'geo-export': PluginSpec.Behavior(GeometryExport),
+    // 'ma-quality-assessment': PluginSpec.Behavior(MAQualityAssessment),
+    // 'zenodo-import': PluginSpec.Behavior(ZenodoImport),
+    // 'sb-ncbr-partial-charges': PluginSpec.Behavior(SbNcbrPartialCharges),
+    // 'wwpdb-chemical-component-dictionary': PluginSpec.Behavior(wwPDBChemicalComponentDictionary),
+    'mvs': PluginSpec.Behavior(MolViewSpec),
+    // 'tunnels': PluginSpec.Behavior(SbNcbrTunnels),
+};
 
 
 const DefaultViewerOptions = {
@@ -161,18 +187,18 @@ export class PhenixViewer {
 
     };
     async process_request(data: string): Promise<any> {
-        try {
-            // Assume Request.fromJSON is defined elsewhere
-            const request = Request.fromJSON(data);
+        //try {
+        // Assume Request.fromJSON is defined elsewhere
+        const request = Request.fromJSON(data);
 
-            // Process the request (handle both sync and async cases)
-            const output = await Promise.resolve(request.data.run(this));
+        // Process the request (handle both sync and async cases)
+        const output = await Promise.resolve(request.data.run(this));
 
-            return output;  // Return the successful output
-        } catch (error) {
-            // Return an error message if something went wrong
-            return { error: error.message || 'Unknown error' };
-        }
+        return output;  // Return the successful output
+        // } catch (error) {
+        //     // Return an error message if something went wrong
+        //     return { error: error.message || 'Unknown error' };
+        // }
         }
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
 
@@ -256,6 +282,48 @@ export class PhenixViewer {
         return new PhenixViewer(plugin);
     }
     
+    async loadMvsFromUrl(url: string, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
+        if (format === 'mvsj') {
+            const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'string' }));
+            const mvsData = MVSData.fromMVSJ(data);
+            await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: url, ...options });
+        } else if (format === 'mvsx') {
+            const data = await this.plugin.runTask(this.plugin.fetch({ url, type: 'binary' }));
+            await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
+                const parsed = await loadMVSX(this.plugin, ctx, data);
+                await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
+            }));
+        } else {
+            throw new Error(`Unknown MolViewSpec format: ${format}`);
+        }
+    }
+
+    /** Load MolViewSpec from `data`.
+     * If `format` is 'mvsj', `data` must be a string or a Uint8Array containing a UTF8-encoded string.
+     * If `format` is 'mvsx', `data` must be a Uint8Array or a string containing base64-encoded binary data prefixed with 'base64,'. */
+    async loadMvsData(data: string | Uint8Array, format: 'mvsj' | 'mvsx', options?: { replaceExisting?: boolean, keepCamera?: boolean }) {
+        console.log("hello")
+        if (typeof data === 'string' && data.startsWith('base64')) {
+            data = Uint8Array.from(atob(data.substring(7)), c => c.charCodeAt(0)); // Decode base64 string to Uint8Array
+        }
+        if (format === 'mvsj') {
+            if (typeof data !== 'string') {
+                data = new TextDecoder().decode(data); // Decode Uint8Array to string using UTF8
+            }
+            const mvsData = MVSData.fromMVSJ(data);
+            await loadMVS(this.plugin, mvsData, { sanityChecks: true, sourceUrl: undefined, ...options });
+        } else if (format === 'mvsx') {
+            if (typeof data === 'string') {
+                throw new Error("loadMvsData: if `format` is 'mvsx', then `data` must be a Uint8Array or a base64-encoded string prefixed with 'base64,'.");
+            }
+            await this.plugin.runTask(Task.create('Load MVSX file', async ctx => {
+                const parsed = await loadMVSX(this.plugin, ctx, data as Uint8Array);
+                await loadMVS(this.plugin, parsed.mvsData, { sanityChecks: true, sourceUrl: parsed.sourceUrl, ...options });
+            }));
+        } else {
+            throw new Error(`Unknown MolViewSpec format: ${format}`);
+        }
+    }
     handleResize() {
         this.plugin.layout.events.updated.next(void 0);
     }
@@ -263,5 +331,10 @@ export class PhenixViewer {
         this.plugin.dispose();
     }
   }
+  export const PluginExtensions = {
+    //wwPDBStructConn: wwPDBStructConnExtensionFunctions,
+    mvs: { MVSData, loadMVS },
+};
+
 
 (window as any).PhenixViewer = PhenixViewer;

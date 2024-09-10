@@ -14,6 +14,11 @@ import { getLocationArray, phenixSelFromLoci, TwoWayDictionary} from './helpers'
 import {  PhenixReferenceClass, PhenixStructureClass, PhenixComponentClass, PhenixRepresentationClass} from './helpers';
 import { StructureSelectionQuery } from '../../mol-plugin-state/helpers/structure-selection-query';
 import { StateSelection } from '../../mol-state';
+import { Shape, ShapeProvider } from '../../lib/mol-model/shape';
+import { Vec3 } from '/lib/mol-math/linear-algebra';
+import { MeshBuilder } from 'molstar/lib/mol-geo/geometry/mesh/mesh-builder';
+import { Color } from '../../lib/mol-util/color';
+
 
 // @ts-ignore
 export namespace Phenix {
@@ -24,7 +29,27 @@ export namespace Phenix {
             return 'auto';
         }
     }
+    export function debugLine(viewer: PhenixViewer){
+        // Define start and end points of the line
+        const start = Vec3.create(0, 0, 0);  // Start of the line
+        const end = Vec3.create(10, 10, 10); // End of the line
 
+        // Build the line geometry using MeshBuilder
+        const builder = MeshBuilder.create();
+        builder.addLine(start, end);
+
+        // Define color and properties for the line
+        const color = Color(0x00FF00);  // Green color
+        const lines = builder.getLines();
+
+        // Create the Shape object
+        const shape = Shape.create('line-shape', {}, lines, () => color, () => 1);
+
+        // Add the shape to Molstar viewer
+        const shapeProvider = ShapeProvider.create({ label: 'Custom Line', shape });
+        viewer.addRepresentation(shapeProvider);
+        viewer.requestRender();
+    }
     export function postInit(this: PhenixViewer) {
         // subscribe hover
         this.plugin.behaviors.interaction.hover.subscribe(ev => {

@@ -103,7 +103,7 @@ function handlePostRequest(req, res) {
     }
   });
 }
-app.post('/action', handlePostRequest);
+app.post('/run', handlePostRequest);
 
 // WebSocket Server for receiving responses from clients
 const server = app.listen(port, () => {
