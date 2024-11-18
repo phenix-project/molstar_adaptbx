@@ -73,6 +73,9 @@ class Program(ProgramTemplate):
         command = f"git clone {self.params.molstar_remote} ../molstar"
         self._print(command)
         run_command(command,print_func=self._print)
+        command = f"git checkout 0b39ad8341fa6c9c1670d0cd416efabedc9da718"
+        self._print(command)
+        run_command(command,print_func=self._print)
       else:
         self._print("ERROR: the molstar git repo not found")
         return
@@ -97,8 +100,8 @@ class Program(ProgramTemplate):
         "webpack.config.js",
         "webpack.config.production.js",
         "webpack.config.viewer.js",
-        "scripts/deploy.js",
-        "src/mol-model-props/computed/interactions/interactions.ts",
+        #"scripts/deploy.js",
+        #"src/mol-model-props/computed/interactions/interactions.ts",
       ]
       for file in files:
         src = src_prefix / file
