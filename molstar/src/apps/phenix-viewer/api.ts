@@ -174,14 +174,13 @@ export class MolstarState extends ApiClass {
 
 
 export class SelectionPoll extends ApiClass {
-  atom_records: string; // json formatted atom records
+  atom_records: any[]
 
   constructor(){
     super("SelectionPoll");
   }
   run(viewer: PhenixViewer) {
-    const json_result = viewer.phenix.pollSelection()
-    this.atom_records = json_result
+    this.atom_records =  viewer.phenix.pollSelection()
   }
 }
 
@@ -195,8 +194,12 @@ export class MakeSelection extends ApiClass {
   }
 
   run(viewer: PhenixViewer) {
-    const exp = viewer.parse("pymol", this.pymol_sel)  
-    viewer.phenix.selectFromSel(exp,this.focus);
+    const exp = viewer.parse("pymol", this.pymol_sel) 
+    let focus = this.focus
+    if (this.pymol_sel == 'none') {
+      focus = false
+    }
+    viewer.phenix.selectFromSel(exp,focus);
 }
 }
 

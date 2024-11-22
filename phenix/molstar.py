@@ -292,11 +292,9 @@ class MolstarGraphics(ModelViewer):
     """
     Get the current selected atoms as a dictionary of atom records
     """
-    poll = SelectionPoll()
-    req = ApiRequest(data=poll)
-    response = self.send_request(req)
-    atom_records = json.loads(response)
-    return atom_records
+    call = SelectionPoll()
+    call = self.send_request(call)
+    return call.atom_records
 
 
   def focus(self):

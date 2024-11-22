@@ -72,25 +72,45 @@ class ApiClass:
 
 @dataclass
 class RawJS(ApiClass):
+  # Inputs:
   js: str  # Raw JavaScript to evaluate
+
+  # Outputs:
+  result: Optional[object] = None
   
 
 @dataclass
 class RawJSAsync(ApiClass):
+  # Inputs:
   js: str  # Raw JavaScript to evaluate asynchronously
+
+  # Outputs
+  result: Optional[object] = None
+
 
 @dataclass
 class SelectionPoll(ApiClass):
-  # Returns what is selected as a list of atom records (one dict per atom)
-  pass
+  # Inputs:
+  # None
+  
+  # Outputs:
+  atom_records: Optional[List[dict]] = None
+  
+  def __post_init__(self):
+    if self.atom_records and isinstance(self.atom_records,str):
+      self.atom_records = json.loads(self.atom_records)
 
 @dataclass
 class MakeSelection(ApiClass):
+  # Inputs:
   pymol_sel: str
   focus: bool
 
+
+
 @dataclass
 class LoadModel(ApiClass):
+  # Inputs:
   ref_id: str
   pdb_str: str
 
@@ -109,14 +129,18 @@ class Focus(ApiClass):
 
 @dataclass
 class ToggleSelectionMode(ApiClass):
+  # Inputs:
   is_selecting: bool
+
 
 @dataclass
 class SetPickingGranularity(ApiClass):
+  # Inputs:
   granularity: Literal['element','residue']
 
 @dataclass
 class AddRepresentation(ApiClass):
+  # Inputs:
   representation: Literal['cartoon','ball-and-stick']
 
 

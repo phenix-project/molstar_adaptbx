@@ -328,14 +328,12 @@ export namespace Phenix {
     }
 
 
-    export function pollSelection(this: PhenixViewer): string {
+    export function pollSelection(this: PhenixViewer) {
         // V2 Function
         const loci = this.phenix.getSelectedLoci();
         //const query = this.phenix.getQueryFromLoci(loci);
         const phenixSel = phenixSelFromLoci(loci)
-        
-        //phenixSel.params.number_of_atoms = this.phenix.getLocations(loci).length
-        return JSON.stringify(phenixSel);
+        return phenixSel
     }
     
     export function setColor(this: PhenixViewer, param: { highlight?: any, select?: any }) {
