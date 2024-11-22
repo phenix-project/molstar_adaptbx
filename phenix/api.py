@@ -87,8 +87,7 @@ class SelectionPoll(ApiClass):
 @dataclass
 class MakeSelection(ApiClass):
   pymol_sel: str
-  success: Optional[bool] = None
-  error: Optional[str] = None
+  focus: bool
 
 @dataclass
 class LoadModel(ApiClass):
@@ -263,4 +262,3 @@ class MolstarState(ApiClass):
   @classmethod
   def from_empty(cls,connection_id=""):
     return cls(references=[],has_synced=False,connection_id=connection_id)
-

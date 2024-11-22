@@ -278,13 +278,13 @@ class MolstarGraphics(ModelViewer):
       
       
 
-  def select_from_pymol(self,pymol_sel,reset=True):
+  def select_from_pymol(self,pymol_sel,reset=True,focus=True):
     """
     Make a selection from pymol selection string
     """
     if reset:
       self.select_none()
-    call = MakeSelection(pymol_sel=pymol_sel)
+    call = MakeSelection(pymol_sel=pymol_sel,focus=focus)
     return self.send_request(call)
 
 
@@ -299,26 +299,18 @@ class MolstarGraphics(ModelViewer):
     return atom_records
 
 
-  def focus(self,selection_string=None,src_type='phenix'):
+  def focus(self):
     """
     Focus on the selected region
     """
-    
-    if selection_string is not None:
-      pymol_sel = self._convert_selection(selection_string=selection_string,
-                                          src_type=src_type,
-                                          dst_type='pymol')
-      selection_call = MakeSelection(pymol_sel=pymol_sel)
-    else:
-      selection_call = None
-    call = Focus(selection=selection_call)
+    call = Focus()
     self.send_request(call)
 
   def select_all(self):
     self.select_from_pymol("all")
 
   def select_none(self):
-    self.select_from_pymol("none",reset=False) # avoid recursion
+    self.select_from_pymol("none",reset=False,focus=False) # avoid recursion
 
 
   # ---------------------------------------------------------------------------
@@ -349,17 +341,8 @@ class MolstarGraphics(ModelViewer):
   # Synchronization
 
   def sync_remote(self):
-    #print("Syncing....")
-    molstar_state = MolstarState.from_empty(connection_id=self.connection_id)
-    req = ApiRequest(data=molstar_state)
-    # Send the POST request with the JSON data
-    response = requests.post(self.url_api, json=req.to_dict())
-    try:
-      response_json = json.loads(response.json()["responses"][0]["data"]["output"])
-      molstar_state = MolstarState.from_json(response_json)
-      return molstar_state
-    except:
-      return None
+    call = MolstarState.from_empty(connection_id=self.connection_id)
+    return self.send_request(call)
 
   # ---------------------------------------------------------------------------
   # Representation

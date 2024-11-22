@@ -147,7 +147,6 @@ export class MolstarState extends ApiClass {
   connection_id: string | undefined = undefined;
   has_synced: boolean = false;
   references: PhenixReference[] = []
-  molstar_state_json: string;
 
   constructor(has_synced: boolean = false, references: PhenixReference[] = []) {
     super("MolstarState");
@@ -167,7 +166,9 @@ export class MolstarState extends ApiClass {
     // If we can set connection_id and return the value, 
     //   then the molstar web app is sufficiently set up
     viewer.phenixState.connection_id = this.connection_id
-    this.molstar_state_json = viewer.phenixState.toJSON()
+    this.has_synced = viewer.phenixState.has_synced;
+    this.references = viewer.phenixState.references;
+    
   }
 }
 
@@ -186,8 +187,7 @@ export class SelectionPoll extends ApiClass {
 
 export class MakeSelection extends ApiClass {
   pymol_sel: string;
-  success?: boolean 
-  error?: string;
+  focus: boolean = true;
 
   constructor(pymol_sel: string = '') {
     super("MakeSelection");
@@ -195,25 +195,9 @@ export class MakeSelection extends ApiClass {
   }
 
   run(viewer: PhenixViewer) {
-    try {
-      const exp = viewer.parse("pymol", this.pymol_sel);
-      if (!exp) {
-        return {
-          success: false,
-          error: "Failed to parse PyMOL selection"
-        };
-      }
-      
-      viewer.phenix.selectFromSel(exp);
-      
-      // Return a properly structured response
-      this.success = true;
-
-    } catch (error) {
-      this.success = false;
-      this.error = error.message
-    }
-  }
+    const exp = viewer.parse("pymol", this.pymol_sel)  
+    viewer.phenix.selectFromSel(exp,this.focus);
+}
 }
 
 export class LoadModel extends ApiClass {

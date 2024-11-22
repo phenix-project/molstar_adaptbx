@@ -26,7 +26,7 @@ banner = """
 *                                                            *
 * Example usage:                                             *
 *   - 'self.graphics.load_model('model.pdb')'                *
-*   - 'self.graphics.select("chain A"))'                     *
+*   - 'self.graphics.select("chain A")'                      *
 *                                                            *
 * Type 'exit()' or press Ctrl+D to quit.                     *
 **************************************************************

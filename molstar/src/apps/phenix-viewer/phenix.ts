@@ -281,13 +281,13 @@ export namespace Phenix {
         //this.phenix.selectFromQuery(selectionQuery)
     }
 
-    export function selectFromSel(this:PhenixViewer,sel:any){
+    export function selectFromSel(this:PhenixViewer,sel:any,focus:boolean=true){
         const selectionQuery = StructureSelectionQuery('Custom Query',sel)
         this.currentSelExpression = selectionQuery.expression
-        this.phenix.selectFromQuery(selectionQuery)
+        this.phenix.selectFromQuery(selectionQuery,focus)
     }
 
-    export function selectFromQuery(this: PhenixViewer, selectionQuery: any) {
+    export function selectFromQuery(this: PhenixViewer, selectionQuery: any, focus: boolean = true) {
         // V2 Function
         this.currentSelExpression = selectionQuery.expression;
         this.plugin.managers.structure.selection.fromSelectionQuery("set",selectionQuery,false)
@@ -306,7 +306,9 @@ export namespace Phenix {
         this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
 
         // focus loci
-        this.plugin.managers.camera.focusLoci(loci);
+        if (focus === true) {
+            this.plugin.managers.camera.focusLoci(loci);
+        }
     }
     export function focusSelected(this: PhenixViewer){
         const loci = this.phenix.getSelectedLoci();
