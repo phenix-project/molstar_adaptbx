@@ -17,9 +17,23 @@ from qttbx.viewers import ModelViewer
 from libtbx.utils import Sorry
 from libtbx import group_args
 from molstar_adaptbx.phenix.utils import generate_uuid
-from molstar_adaptbx.phenix.api import ApiClass, Request,RawJS, MolstarState
-
-
+from molstar_adaptbx.phenix.api import (
+  ApiClass,
+  ApiRequest,
+  RawJS,
+  RawJSAsync, 
+  MolstarState, 
+  SelectionPoll,
+  MakeSelection,
+  LoadModel, 
+  Focus,
+  ClearViewer,
+  ResetView,
+  ToggleSelectionMode,
+  SetPickingGranularity,
+  AddRepresentation,
+  SetColor,
+)
 # =============================================================================
 
 class MolstarGraphics(ModelViewer):
@@ -110,33 +124,6 @@ class MolstarGraphics(ModelViewer):
       Nothing
     '''
 
-
-
-    # Start volume streaming server TODO: This should only occur if volumes will be used
-    # if volume_streaming:
-    #   self.log()
-    #   self.log('-'*79)
-    #   self.log('Starting volume streaming server')
-    #   self.volume_streamer = VolumeStreamingManager(
-    #             node_js_path = self.config.node_js_path,
-    #             volume_server_relative_path = self.config.volume_server_relative_path,
-    #             pack_script_relative_path = self.config.pack_script_relative_path,
-    #             default_server_port=1336,
-    #             debug = True
-    #   )
-    #   self.volume_streamer.start_server()
-    #   self.log(self.volume_streamer.url)
-    #   self.log('-'*79)
-    #   self.log()
-
-
-    # Start node api server
-    if self.server:
-      self.log()
-      self.log('-'*79)
-      self.log('Starting API server for Molstar')
-      self.server.start()
-
     # Start node http-server
     if self.server:
       self.log()
@@ -165,7 +152,7 @@ class MolstarGraphics(ModelViewer):
       counter += 1
       time.sleep(1)
     if not self._connected:
-      raise Sorry('The Molstar on the QT web view is not reachable at {} after '
+      raise Sorry(' Molstar not reachable at {} after '
                   '{} seconds.'.format(self.url, counter))
     self.log('Molstar is ready')
     self.log('-'*79)
@@ -203,34 +190,39 @@ class MolstarGraphics(ModelViewer):
   def url_api(self):
     return self.server.url + "/run"
 
-  def send_request(self,request: Request):
+  def send_request(self,api_data: ApiClass):
+    """
+    Package up an instance of ApiClass and send it to the server. 
+    Expects the response to be json that can isntantiate the ApiClass
+    with the results present as populated member variables.
+
+    This keeps all API calls contained to a single class definition.
+    """
+    request = ApiRequest(data=api_data)
     # Send the POST request with the JSON data
     response = requests.post(self.url_api, json=request.to_dict())
-    
+    # Response must have a very specific structure
     try:
-      d = response.json()
-      if isinstance(d,dict) and  "responses" in d:
-        if "success" not in d or not d["success"]:
-            return None
-        if isinstance(d,dict) and  "responses" in d and isinstance(d["responses"],list):
-          if isinstance(d["responses"][0],dict) and "output" in d["responses"][0]:
-            return json.loads(d["responses"][0]["output"])
+      response_dict = response.json()
+      # Mandatory checks
+      assert isinstance(response_dict,dict)
+      assert "responses" in response_dict
+      assert "success" in response_dict and response_dict["success"]
+      assert isinstance(response_dict,dict)
+      assert "responses" in response_dict
+      assert isinstance(response_dict["responses"],list)
+      assert isinstance(response_dict["responses"][0],dict)
+      assert "data" in response_dict["responses"][0]
+      assert "output" in response_dict["responses"][0]["data"]
+      output = response_dict["responses"][0]["data"]["output"]
+      api_request = ApiRequest.from_json(json.loads(output))
+      api_data = api_request.data
+      return api_data
     except:
-      print("Failed to unpack responses")
       print(response.text)
+      raise RuntimeError("Response did not meet expected form.")
 
-   
-
-  def send_command(self, js_command,callback=print,sync=False,log_js=False):
-    # Raw js command
-    if log_js:
-      self.log("JavaScript command:")
-      self.log(js_command)
-    
-    rawJs = RawJS(js=js_command)
-    req = Request(data=rawJs)
-    return self.send_request(req)
-
+  
 
   # ---------------------------------------------------------------------------
   # Models
@@ -248,84 +240,85 @@ class MolstarGraphics(ModelViewer):
     # Serialize as pdb string
     model = self.dm.get_model(filename=filename)
     model_str = model.model_as_pdb()
-
-    # Create js 
-    command =  f"""
-    var model_str = `{model_str}`
-    {self.plugin_prefix}.phenix.loadStructureFromPdbString(model_str,'pdb', 'model', '{ref_id}')
-    """
-
-    # Send
-    self.send_command(command,sync=False)
+    call = LoadModel(pdb_str=model_str,ref_id=ref_id)
+    self.send_request(call)
 
 
   # ---------------------------------------------------------------------------
   # Selection
 
-  def _build_query_string(self,selection_test_text):
-    # Returns js string to set 'query' from a Selection object
-    js_str = f"""
-    const MS = {self.plugin_prefix}.MS
-    const sel = MS.struct.generator.atomGroups({{
-              'atom-test': {selection_test_text}}})
-    const query = {self.plugin_prefix}.StructureSelectionQuery('Phenix Query',sel)
-    """
-    return js_str
-    
+  def _convert_selection(self,selection_string,src_type='phenix',dst_type='pymol'):
+    assert src_type in ['phenix']
+    assert dst_type in ['pymol']
+    if src_type == 'phenix':
+      # Check if cctbx is accessible for selection translation
 
-  def select_from_string(self,selection_string):
+      try:
+        from qttbx.viewers.selection.parser import Parser
+      except:
+        raise RuntimeError("Unable to import selection translation from cctbx.\
+         Cannot use phenix selection syntax.")
+
+      # Carry on translating to pymol
+      parser = Parser.from_string(selection_string)
+      ast = parser.parse()
+
+      if dst_type == 'pymol':
+        pymol_sel = ast.pymol_string()
+        return pymol_sel
+
+  def select(self,selection_string,syntax="phenix"):
+    assert syntax in ['phenix','pymol']
+    if syntax == 'pymol':
+      pymol_sel = selection_string# Pymol is the common target syntax
+    if syntax == 'phenix':
+      # Send pymol string to Molstar
+      pymol_sel = self._convert_selection(selection_string)
+    self.select_from_pymol(pymol_sel)
+      
+      
+
+  def select_from_pymol(self,pymol_sel,reset=True):
     """
-    Make a selection from a Selection object. All other selection functions lead here
+    Make a selection from pymol selection string
     """
-    self.deselect_all()
-    command = f"""
-    {self._build_query_string(selection_string)}
-    {self.plugin_prefix}.phenix.selectFromQuery(query);
-    """
-    self.send_command(command)
+    if reset:
+      self.select_none()
+    call = MakeSelection(pymol_sel=pymol_sel)
+    return self.send_request(call)
 
 
   def poll_selection(self,callback=None):
     """
-    Get the current selection as a new selection object.
+    Get the current selected atoms as a dictionary of atom records
     """
     poll = SelectionPoll()
-    response = viewer.send_request(Request(data=poll))
+    req = ApiRequest(data=poll)
+    response = self.send_request(req)
     atom_records = json.loads(response)
     return atom_records
 
 
-
-    # command = f"""
-    # {self.plugin_prefix}.phenix.pollSelection();
-    # """
-    # result_str = self.send_command(command,callback=callback,sync=True)
-    # try:
-    #   atom_records = json.loads(result_str)
-    #   # TODO: don't require selection code in adaptbx?
-    #   #selection = Selection.from_atom_records(atom_records)
-    #   return selection
-    # except:
-    #   self.log(result_str)
-    #   raise
-    #   return None
-
-  def focus_selected(self):
+  def focus(self,selection_string=None,src_type='phenix'):
     """
     Focus on the selected region
     """
-    command = f"""
-    {self.plugin_prefix}.phenix.focusSelected();
-    """
-    self.send_command(command,sync=True)
+    
+    if selection_string is not None:
+      pymol_sel = self._convert_selection(selection_string=selection_string,
+                                          src_type=src_type,
+                                          dst_type='pymol')
+      selection_call = MakeSelection(pymol_sel=pymol_sel)
+    else:
+      selection_call = None
+    call = Focus(selection=selection_call)
+    self.send_request(call)
 
   def select_all(self):
-    command = f"{self.plugin_prefix}.phenix.selectAll()"
-    self.send_command(command)
+    self.select_from_pymol("all")
 
-  def deselect_all(self):
-    command = f"{self.plugin_prefix}.phenix.deselectAll()"
-    self.send_command(command)
+  def select_none(self):
+    self.select_from_pymol("none",reset=False) # avoid recursion
 
 
   # ---------------------------------------------------------------------------
@@ -333,39 +326,32 @@ class MolstarGraphics(ModelViewer):
 
   def clear_viewer(self):
     # Remove all objects from the viewer
-    command = f"{self.plugin_prefix}.plugin.clear()"
-    self.send_command(command)
-
+    call = ClearViewer()
+    self.send_request(call)
+    
   def reset_camera(self):
-    command = f"{self.plugin_prefix}.plugin.managers.camera.reset();"
-    self.send_command(command)
+    call = ResetView()
+    self.send_request(call)
 
-  def _toggle_selection_mode(self,value):
-    if value == True:
-      value = 'true'
-    else:
-      value = 'false'
-    command = f"""
-    {self.plugin_prefix}.phenix.toggleSelectionMode({value});
-    """
-    self.send_command(command)
+  def selection_mode_on(self):
+    call = ToggleSelectionMode(is_selecting=True)
+    self.send_request(call)
 
-  def _set_granularity(self,value="residue"):
-    assert value in ['element','residue'], 'Provide one of the implemented picking levels'
-    if value == "element":
-      command = f"{self.plugin_prefix}.plugin.managers.interactivity.setProps({{ granularity: 'element' }})"
-    elif value == "residue":
-      command = f"{self.plugin_prefix}.plugin.managers.interactivity.setProps({{ granularity: 'residue' }})"
-    self.send_command(command)
+  def selection_mode_off(self):
+    call = ToggleSelectionMode(is_selecting=False)
+    self.send_request(call)
 
+  def set_granularity(self,granularity="residue"):
+    call = SetPickingGranularity(granularity=granularity)
+    self.send_request(call)
 
   # ---------------------------------------------------------------------------
   # Synchronization
 
   def sync_remote(self):
-    print("Syncing....")
+    #print("Syncing....")
     molstar_state = MolstarState.from_empty(connection_id=self.connection_id)
-    req = Request(data=molstar_state)
+    req = ApiRequest(data=molstar_state)
     # Send the POST request with the JSON data
     response = requests.post(self.url_api, json=req.to_dict())
     try:
@@ -373,7 +359,31 @@ class MolstarGraphics(ModelViewer):
       molstar_state = MolstarState.from_json(response_json)
       return molstar_state
     except:
-      self.log("Reponse text:")
-      self.log(response.text)
       return None
-      #raise ValueError("Keyword 'responses' not present in response json")
+
+  # ---------------------------------------------------------------------------
+  # Representation
+
+  def add_representation(self,representation_name):
+    call = AddRepresentation(representation=representation_name)
+    self.send_request(call)
+
+  def set_color(self,color_string):
+    call = SetColor(color_string=color_string)
+    self.send_request(call)
+
+  # ---------------------------------------------------------------------------
+  # Custom javascript
+
+  def send_command(self, js_command,callback=print,sync=True,log_js=False):
+    # Raw js command
+    if log_js:
+      self.log("JavaScript command:")
+      self.log(js_command)
+    if sync:
+      rawJs = RawJS(js=js_command)
+      req = ApiRequest(data=rawJs)
+    else:
+      rawJs = RawJSAsync(js=js_command)
+      req = ApiRequest(data=rawJs)
+    return self.send_request(req)

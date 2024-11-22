@@ -7,17 +7,11 @@ import { StateTransforms } from '../../mol-plugin-state/transforms';
 import { PluginCommands } from '../../mol-plugin/commands';
 import { Color } from '../../mol-util/color';
 import { ParamDefinition } from '../../mol-util/param-definition';
-import { CreateVolumeStreamingBehavior, CreateVolumeStreamingInfo } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
 import { PhenixViewer } from './app';
 import { MolstarState } from './api';
 import { getLocationArray, phenixSelFromLoci, TwoWayDictionary} from './helpers';
 import {  PhenixReferenceClass, PhenixStructureClass, PhenixComponentClass, PhenixRepresentationClass} from './helpers';
 import { StructureSelectionQuery } from '../../mol-plugin-state/helpers/structure-selection-query';
-import { StateSelection } from '../../mol-state';
-import { Shape, ShapeProvider } from '../../lib/mol-model/shape';
-import { Vec3 } from '/lib/mol-math/linear-algebra';
-import { MeshBuilder } from 'molstar/lib/mol-geo/geometry/mesh/mesh-builder';
-import { Color } from '../../lib/mol-util/color';
 
 
 // @ts-ignore
@@ -280,47 +274,6 @@ export namespace Phenix {
         this.phenixState.has_synced = true
     }
 
-    export function syncReferences(this: PhenixViewer){
-      // const result = { ...this.phenixState };
-      // const references = result.references;
-      // for (const refId in references) {
-      //     if (references.hasOwnProperty(refId)) {
-      //         const ref = references[refId];
-      //         // Submit the id to fetchExternalId function and wait for the result
-      //         if (this.refMapping.hasRefId(ref.id)){
-      //           const externalId = this.refMapping.retrieveRefId(ref.id);
-      //           // Set the result in external_ids under the key "Molstar"
-      //           ref.external_ids["molstar"] = externalId;
-      //         }
-
-      //     }}
-      // this.phenixState = result
-    }
-
-    // export function syncStyle(this: PhenixViewer){
-    //   const result = { ...this.phenixState };
-    //   const references = result.references;
-
-    //   // Update representations
-    //   // Check if references exist and are not an empty object
-    //     for (const refId in references) {
-    //       if (references.hasOwnProperty(refId)) {
-    //         const ref = references[refId];
-
-    //         ref.style.representation = this.phenix.getRepresentationNames(ref.id);
-    //           }
-    //         }
-    //   this.phenixState = result;
-    //       }
-
-
-    // export function getState(this: PhenixViewer) {
-    //     // // @ts-ignore
-    //     // result.hasSynced = this.hasSynced;
-    //     this.phenixState.connection_id = this.connection_id
-    //     return JSON.stringify(this.phenixState); // debug
-
-    // }
     export function queryFromExpression(this:PhenixViewer,selection_expression: any){
         const selectionQuery = StructureSelectionQuery('Phenix Query',selection_expression)
         return selectionQuery
@@ -372,28 +325,6 @@ export namespace Phenix {
         this.plugin.managers.camera.focusLoci(loci);
     }
 
-    // export function getQueryFromLoci(this: PhenixViewer, loci: Loci) {
-    //     // console.log("get query from loci")
-    //     // @ts-ignore
-    //     const data_id = loci.structure.state.model.id;
-    //     // console.log(data_id)
-    //     const ref_id_molstar = this.refMapping_data.retrieveRefId(data_id); // returns the 'other'
-    //     // console.log(ref_id_molstar)
-    //     if (ref_id_molstar) {
-    //         const ref = this.refMapping.retrieveRef(ref_id_molstar);
-    //         // console.log(ref.externalRefId)
-    //         const query = queryFromLoci(loci);
-    //         // @ts-ignore
-    //         query.params.refId = ref.externalRefId;
-    
-    //         return query;
-    //     }
-    // }
-    // export function getQueryJSONFromLoci(this: PhenixViewer, loci: Loci) {
-    //     const query = this.phenix.getQueryFromLoci(loci);
-    //     const queryJSON = JSON.stringify(query);
-    //     return queryJSON;
-    // }
 
     export function pollSelection(this: PhenixViewer): string {
         // V2 Function
@@ -405,34 +336,6 @@ export namespace Phenix {
         return JSON.stringify(phenixSel);
     }
     
-    // export async function select(this: PhenixViewer, query: SelectionQuery) {
-
-    //     // get query as a loci
-    //     // const loci = this.phenix.getLociForParams(query);
-
-    //     const loci = this.phenix.getSelectedLoci();
-
-    //     // if empty, stop
-    //     if (Loci.isEmpty(loci)) {
-    //         return;
-    //     }
-
-    //     // // set non selected theme color
-    //     // if (query.nonSelectedColor) {
-    //     //     for await (const s of structureData) {
-    //     //         await this.plugin.managers.structure.component.updateRepresentationsTheme(s.components, { color: params.colorMode, colorParams: { value: this.normalizeColor(params.nonSelectedColor) } });
-    //     //     }
-    //     // }
-
-    //     // set default selection color (can remove?)
-    //     this.phenix.setColor({ select: { r: 255, g: 112, b: 3 }, highlight: { r: 255, g: 112, b: 3 } });
-
-    //     // apply selection
-    //     this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
-
-    //     // focus loci
-    //     this.plugin.managers.camera.focusLoci(loci);
-    // }
     export function setColor(this: PhenixViewer, param: { highlight?: any, select?: any }) {
 
         const renderer = this?.plugin?.canvas3d?.props.renderer;
@@ -524,18 +427,6 @@ export namespace Phenix {
         const queryAll = StructureSelectionQuery('All', this.MS.struct.generator.all(), { category: '', priority: 1000 }); 
         return queryAll
     }
-    // export function queryCurrent(this:PhenixViewer,contextData: any | undefined){
-    //     if (!contextData){
-    //       contextData = { category: '', referencesCurrent: true }
-    //     }
-    //     const queryCurrent = StructureSelectionQuery('Current Selection', this.MS.internal.generator.current(), contextData); 
-    //     return queryCurrent
-    // }
-
-    // export function setCurrentSelExpression(this:PhenixViewer){
-    //     var sel = this.phenix.queryCurrent()
-    //     this.currentSelExpression = sel.expression
-    // }
 
     
     export function selectAll(this:PhenixViewer){
@@ -546,13 +437,7 @@ export namespace Phenix {
         // V2 Function
         this.plugin.managers.interactivity.lociSelects.deselectAll();
     }
-    // export function getQueryAll(this: PhenixViewer, refId: string) {
-    //     const ref = this.refMapping.retrieveRef(refId);
-    //     const query = { ...allSelectionQuery };
-    //     // @ts-ignore
-    //     query.params.refId = ref.molstarRefId;
-    //     return query;
-    // }
+
     export function debugQuery(this: PhenixViewer){
         const MS = this.MS
         const sel = MS.struct.generator.atomGroups({
@@ -654,15 +539,7 @@ export namespace Phenix {
         return structures[0]
         
     }
-    // export function getSelectedQuery(this: PhenixViewer): SelectionQuery {
-    //     // Note: this is incomplete because it doesn't account cross-model selections
-    //     const entry_map = this.phenix.getSel().entries;
-    //     const result = this.phenix.checkSingleEntry(entry_map);
-    //     const loci = result.value.selection;
-    //     const query = this.phenix.getQueryFromLoci(loci);
-    //     return query;
-    // }
-
+ 
     export function getLocations(this: PhenixViewer, loci: Loci) {
         return getLocationArray(loci);
     }
@@ -671,14 +548,6 @@ export namespace Phenix {
         // @ts-ignore
         return StructureElement.Stats.ofLoci(loci);
     }
-    // export function getColorOfSelection(this: PhenixViewer, query: SelectionQuery) {
-    //     const ref = this.refMapping.retrieveRef(query.params.refId);
-    //     // @ts-ignore
-    //     const themeParams = StructureComponentManager.getThemeParams(this.plugin, ref.structure);
-    //     const colorValue = ParamDefinition.getDefaultValues(themeParams);
-    //     return colorValue;
-    // }
-
     export async function colorSelection(this: PhenixViewer, query: StructureSelectionQuery, R: number, G: number, B: number) {
         
         this.phenix.selectFromQuery(query)
@@ -695,22 +564,6 @@ export namespace Phenix {
         this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
 
     }
-
-    // export async function setColorSelected(this: PhenixViewer,R: number, G: number, B: number) {
-    //     const loci = this.phenix.getSelectedLoci()
-    //     const structure = this.phenix.getSelectedStructure()
-        
-
-    //     this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
-    //     const themeParams = StructureComponentManager.getThemeParams(this.plugin, structure);
-    //     const themeValues = ParamDefinition.getDefaultValues(themeParams);
-    //     themeValues.action.name = 'color';
-    //     themeValues.action.params = { color: Color.fromRgb(R,G,B), opacity: 1 };
-    //     await this.plugin.managers.structure.component.applyTheme(themeValues, [structure]);
-    //     this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
-
-    // }
-
       
 
     export function getStructureForRef(this:PhenixViewer, phenixRefId: string){
@@ -720,10 +573,6 @@ export namespace Phenix {
         return structure
     }
 
-    // export async function setTransparencySelected(this: PhenixViewer,component_name: string | undefined, representation_name: string | undefined, value: number){
-    //     const query = this.phenix.queryCurrent()
-    //     this.phenix.setTransparencyQuery(query,component_name,representation_name,value)
-    // }
 
     export async function setTransparencyQuery(this: PhenixViewer, query: StructureSelectionQuery, component_name: string | undefined, representation_name: string | undefined, value: number) {
         // reference: https://github.com/molstar/molstar/issues/149
@@ -823,50 +672,4 @@ export namespace Phenix {
         }
         this.plugin.behaviors.interaction.selectionMode.next(isVisible);
     }
-
-
-    export async function loadMap(this: PhenixViewer, modelId: string, volumeId: string) {
-        return
-        // this.hasSynced = false;
-        // const refIdMolstar = this.refMapping.retrieveRefId(modelId);
-        // if (!refIdMolstar) return;
-        // const asm = this.plugin.state.data.select(refIdMolstar)[0].obj!;
-        // // console.log('asm', asm);
-        // const mapParams = InitVolumeStreaming.createDefaultParams(asm, this.plugin);
-        // mapParams.entries = [{ id: volumeId }];
-        // mapParams.method = 'em';
-        // mapParams.options.serverUrl = this.volumeServerURL;
-        // // if (!this.volumeStreamingRef) {
-        // const volumeStreamingRef = 'volume-streaming' + '' + Math.floor(Math.random() * Math.floor(100));
-        // mapParams.options.behaviorRef = volumeStreamingRef;
-        // this.refMapping_volume[volumeId] = volumeStreamingRef;
-        // mapParams.defaultView = 'auto';
-        // await this.plugin.runTask(this.plugin.state.data.applyAction(InitVolumeStreaming, mapParams, refIdMolstar));
-
-        // // update state
-        // // const volumeEntries = this.phenix.volumeRefInfo().params.values.entries;
-        // // @ts-ignore
-        // this.phenixState.references[volumeId].external_ids.molstar = volumeStreamingRef;
-        // this.hasVolumes = true;
-        // this.hasSynced = true;
-
-    }
-
-    export function getVolumeEntry(this: PhenixViewer, volumeId: string) {
-        const entry = this.phenix.volumeRefInfo().params.values.entries.filter((entry: any) => entry.dataId === volumeId)[0];
-        return entry;
-    }
-    export function volumeRefInfo(this: PhenixViewer) {
-        const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingInfo));
-        // const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingBehavior));
-        return refs[0];
-    }
-    export function volumeRefBehavior(this: PhenixViewer) {
-        const refs = this.plugin.state.data.select(StateSelection.Generators.ofTransformer(CreateVolumeStreamingBehavior));
-        // console.log('length of behavior refs: ', refs.length);
-        return refs[0];
-    }
-
-
 }
-

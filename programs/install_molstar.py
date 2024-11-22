@@ -58,11 +58,11 @@ class Program(ProgramTemplate):
     pass
 
   def run(self):
-    self._print("Being installation...")
     # First check if the molstar repo exists in the expeected locaion 
     # (one level up from adaptbx)
     adaptbx_dir = Path(__file__).parent.parent
     molstar_dir = adaptbx_dir.parent / "molstar"
+    self._print("Being installation into: "+str(molstar_dir))
     env_name = self.params.molstar_env_name
     if molstar_dir.exists() and self.params.fresh_install:
       self._print("Removing existing installation...")
@@ -73,7 +73,7 @@ class Program(ProgramTemplate):
         command = f"git clone {self.params.molstar_remote} ../molstar"
         self._print(command)
         run_command(command,print_func=self._print)
-        command = f"git checkout 0b39ad8341fa6c9c1670d0cd416efabedc9da718"
+        command = f"git -C ../molstar checkout 0b39ad8341fa6c9c1670d0cd416efabedc9da718"
         self._print(command)
         run_command(command,print_func=self._print)
       else:

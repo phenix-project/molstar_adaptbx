@@ -25,6 +25,8 @@ import { Task } from '../../mol-task';
 
 // Start import modifications
 import { MolScriptBuilder as MS} from '../../mol-script/language/builder';
+import { Script } from '../../mol-script/script';
+import { parse } from '../../mol-script/transpile';
 import {  StructureSelectionQuery, StructureSelectionQueries } from '../../mol-plugin-state/helpers/structure-selection-query'
 import { TwoWayDictionary } from './helpers';
 import { StructureProperties as Props, StructureProperties } from '../../mol-model/structure';
@@ -39,7 +41,7 @@ import { StateBuilder, StateObjectSelector } from '../../mol-state';
 import { Phenix } from './phenix';
 import { StructureRepresentation3D } from '../../mol-plugin-state/transforms/representation';
 import { CreateVolumeStreamingBehavior, InitVolumeStreaming } from '../../mol-plugin/behavior/dynamic/volume-streaming/transformers';
-import { Request, MolstarState } from './api';
+import { ApiRequest, MolstarState } from './api';
 import { PluginContext } from '../../mol-plugin/context';
 
 
@@ -126,6 +128,8 @@ export class PhenixViewer {
     currentSelExpression: any;
     StateObjectSelector = StateObjectSelector;
     MS = MS;
+    parse = parse;
+    Script = Script;
     StructureRepresentation3D = StructureRepresentation3D;
     Color = Color;
     PluginContext = PluginContext;
@@ -179,26 +183,21 @@ export class PhenixViewer {
         getLocations: Phenix.getLocations.bind(this),
         getLociStats: Phenix.getLociStats.bind(this),
         setTransparencyQuery: Phenix.setTransparencyQuery.bind(this),
-        volumeRefBehavior: Phenix.volumeRefBehavior.bind(this),
-        volumeRefInfo: Phenix.volumeRefInfo.bind(this),
-        getVolumeEntry: Phenix.getVolumeEntry.bind(this),
-        loadMap: Phenix.loadMap.bind(this),
-        syncReferences: Phenix.syncReferences.bind(this),
+
 
     };
     async process_request(data: string): Promise<any> {
-        //try {
-        // Assume Request.fromJSON is defined elsewhere
-        const request = Request.fromJSON(data);
+        try {
+            // Assume Request.fromJSON is defined elsewhere
+            const request = ApiRequest.fromJSON(data);
 
-        // Process the request (handle both sync and async cases)
-        const output = await Promise.resolve(request.data.run(this));
-
-        return output;  // Return the successful output
-        // } catch (error) {
-        //     // Return an error message if something went wrong
-        //     return { error: error.message || 'Unknown error' };
-        // }
+            // Process the request (handle both sync and async cases)
+            await Promise.resolve(request.data.run(this));
+            return request.toJSON();  // Return the successful output
+        } catch (error) {
+            // Return an error message if something went wrong
+            return { error: error.message || 'Unknown error in PhenixViewer process_request()' };
+        }
         }
     static async create(elementOrId: string | HTMLElement, options: Partial<ViewerOptions> = {}) {
 

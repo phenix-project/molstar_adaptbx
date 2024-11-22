@@ -22,8 +22,11 @@ banner = """
 * Use Python to interact with molstar:                       *
 *                                                            *
 *   - 'self': the CCTBX program template instance            *
+*   - 'self.graphics': the CCTBX model viewer instance       *
 *                                                            *
-*   - 'self.viewer': the CCTBX model viewer instance         *
+* Example usage:                                             *
+*   - 'self.graphics.load_model('model.pdb')'                *
+*   - 'self.graphics.select("chain A"))'                     *
 *                                                            *
 * Type 'exit()' or press Ctrl+D to quit.                     *
 **************************************************************
@@ -74,7 +77,7 @@ class Program(ProgramTemplate):
 
     env_bin_dir = f"{env_dir}/bin"
     if self.params.root_prefix == "":
-      molstar_install_dir = str(Path(__file__).parent.parent / "molstar")
+      molstar_install_dir = str(Path(__file__).parent.parent.parent / "molstar")
     else:
       molstar_install_dir = self.params.root_prefix
     server = NodeHttpServer([
@@ -82,18 +85,18 @@ class Program(ProgramTemplate):
       f"{molstar_install_dir}/src/phenix/server.js"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
-    self.viewer = MolstarGraphics(
+    self.graphics = MolstarGraphics(
       dm=self.data_manager,
       server = server,
     )
-    self.viewer.start_viewer()
+    self.graphics.start_viewer()
 
     # If default model is set, load it immediately
     default_filename = self.data_manager._default_model
     if default_filename:
       print(f"Found default model with filename: {default_filename}")
-      time.sleep(2)
-      self.viewer.load_model(default_filename)
+      time.sleep(1)
+      self.graphics.load_model(default_filename)
 
     # Start interactive shell
     code.interact(banner=banner,local=locals())
