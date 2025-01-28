@@ -58,6 +58,16 @@ class Program(ProgramTemplate):
   root_prefix = ""
    .type = str
    .help = "If not default value of emtpy string, then the root directory of the molstar install."
+
+  interactive = True
+    .type = bool
+    .help = "Whether to start the interactive code console."
+
+  keep_alive = False
+    .type = bool
+    .help = "Whether to return the program task within the results for further interaction."
+
+
   """
 
   def validate(self):
@@ -65,11 +75,11 @@ class Program(ProgramTemplate):
 
 
   def get_results(self):
-    return group_args()
+    return self.results
 
 
 
-  def run(self):
+  def initiate_viewer(self):
     # Set up a server to serve the molstar app
     env_name = "molstar_env"
     env_dir = get_conda_env_directory(env_name)
@@ -80,17 +90,22 @@ class Program(ProgramTemplate):
       molstar_install_dir = str(Path(__file__).parent.parent.parent / "molstar")
     else:
       molstar_install_dir = self.params.root_prefix
-    server = NodeHttpServer([
+    self.server = NodeHttpServer([
       f"{env_bin_dir}/node",
       f"{molstar_install_dir}/src/phenix/server.js"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
-    self.graphics = MolstarGraphics(
+    graphics = MolstarGraphics(
       dm=self.data_manager,
-      server = server,
+      server = self.server,
     )
-    self.graphics.start_viewer()
+    return graphics
+    
 
+
+  def run(self):
+    self.graphics = self.initiate_viewer()
+    self.graphics.start_viewer()
     # If default model is set, load it immediately
     default_filename = self.data_manager._default_model
     if default_filename:
@@ -99,4 +114,10 @@ class Program(ProgramTemplate):
       self.graphics.load_model(default_filename)
 
     # Start interactive shell
-    code.interact(banner=banner,local=locals())
+    if self.params.interactive:
+      code.interact(banner=banner,local=locals())
+    if self.params.keep_alive:
+      task = self
+    else:
+      task = None
+    self.results = group_args(task=self,url=self.server.url)

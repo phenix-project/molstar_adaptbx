@@ -9,6 +9,7 @@ from typing import Optional
 
 import requests
 import webbrowser
+from contextlib import contextmanager
 import urllib.parse
 import subprocess
 
@@ -55,6 +56,7 @@ class MolstarGraphics(ModelViewer):
     self.dm = dm
     self.loaded = {}
     self.connection_id = generate_uuid()
+    self.last_response = None
 
     self.log_list = []
     self.debug = True
@@ -105,10 +107,8 @@ class MolstarGraphics(ModelViewer):
     -------
       Command for running Molstar
     '''
-
-    self.command = ['http-server',self.molstar_build_dir]
-    return self.command
-
+    if self._connected:
+      return self.url
 
   def start_viewer(self,volume_streaming=False,timeout=60):
     '''
@@ -172,13 +172,23 @@ class MolstarGraphics(ModelViewer):
       self._connected = False
     return self._connected
 
+  def __del__(self):
+    self.close_viewer()
 
+  @contextmanager
+  def _wait_for_connection(self):
+    """
+    A context manager that waits until connected
+    """
+    i = 0
+    while not self._connected and i<30:
+        time.sleep(0.5)
+        i+=1
+    yield
 
   def close_viewer(self):
-    self.server.stop()
-    if hasattr(self,"volume_streamer"):
-      self.volume_streamer.stop_server()
-    self.log('='*79)
+    with self._wait_for_connection():
+      self.server.stop()
 
   def log_message(self,message):
     self.log_list.append(message)
@@ -201,6 +211,7 @@ class MolstarGraphics(ModelViewer):
     request = ApiRequest(data=api_data)
     # Send the POST request with the JSON data
     response = requests.post(self.url_api, json=request.to_dict())
+    self.last_response = response
     # Response must have a very specific structure
     try:
       response_dict = response.json()

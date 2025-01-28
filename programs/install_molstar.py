@@ -17,6 +17,9 @@ class Program(ProgramTemplate):
 
   master_phil_str = """
 
+  molstar_version = 4.9.1
+    .type = str
+    .help = Molstar version number to install
 
   fresh_install = False
     .type = bool
@@ -61,8 +64,8 @@ class Program(ProgramTemplate):
     # First check if the molstar repo exists in the expeected locaion 
     # (one level up from adaptbx)
     adaptbx_dir = Path(__file__).parent.parent
-    molstar_dir = adaptbx_dir.parent / "molstar"
-    self._print("Being installation into: "+str(molstar_dir))
+    molstar_dir = adaptbx_dir.parent / "../build/molstar"
+    self._print("Beginning installation into: "+str(molstar_dir))
     env_name = self.params.molstar_env_name
     if molstar_dir.exists() and self.params.fresh_install:
       self._print("Removing existing installation...")
@@ -70,10 +73,10 @@ class Program(ProgramTemplate):
       self._print("Done.\n\n")
     if not molstar_dir.exists():
       if self.params.clone_molstar_repo:
-        command = f"git clone {self.params.molstar_remote} ../molstar"
+        command = f"git clone {self.params.molstar_remote} ../build/molstar"
         self._print(command)
         run_command(command,print_func=self._print)
-        command = f"git -C ../molstar checkout 0b39ad8341fa6c9c1670d0cd416efabedc9da718"
+        command = f"git -C ../build/molstar checkout v{self.params.molstar_version} -- ."
         self._print(command)
         run_command(command,print_func=self._print)
       else:
@@ -112,7 +115,7 @@ class Program(ProgramTemplate):
         dst.parent.mkdir(exist_ok=True,parents=True)
         shutil.copy(src, dst)
       self._print("Done.\n\n")
-    
+
     # Install js dependencies
     #   1. Create a new conda env to get high nodejs versions
     #   2. Install nodejs
@@ -138,19 +141,19 @@ class Program(ProgramTemplate):
         install_package_in_env(env_name, package,print_func=self._print)
 
     # Install nodejs dependencies
-   
+    build_dir = molstar_dir
     npm_bin_path = f"{env_dir}/bin/npm"
     commands = [ ]
 
     if not self.params.skip_install:
       commands += [
-        f"{npm_bin_path}  install --prefix {molstar_dir}",
+        f"{npm_bin_path}  install --prefix {build_dir}",
     ]
 
     if not self.params.skip_build:
       commands += [
-      f"{npm_bin_path} run clean --prefix {molstar_dir}",
-      f"{npm_bin_path} run build --prefix {molstar_dir}",
+      f"{npm_bin_path} run clean --prefix {build_dir}",
+      f"{npm_bin_path} run build --prefix {build_dir}",
     ] 
     for command in commands:
       run_command_in_env(env_name, command,print_func=self._print)
