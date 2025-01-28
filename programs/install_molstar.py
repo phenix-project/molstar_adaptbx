@@ -26,7 +26,7 @@ class Program(ProgramTemplate):
 
 
   def run(self):
-    # First check if the molstar repo exists in the expected locaion 
+    # First check if the molstar repo exists in the expected locaion
     # (one level up from adaptbx)
     adaptbx_dir = libtbx.env.find_in_repositories(relative_path="molstar_adaptbx")
     molstar_dir = libtbx.env.find_in_repositories(relative_path="molstar")
@@ -34,15 +34,17 @@ class Program(ProgramTemplate):
       raise Sorry("molstar_adaptbx directory not found")
     if not molstar_dir:
       raise Sorry("molstar directory not found")
+    import pdb
+    pdb.set_trace()
     adaptbx_dir = Path(adaptbx_dir)
     molstar_dir = Path(molstar_dir)
     molstar_build = Path(molstar_dir,"build")
     shutil.rmtree(molstar_build)
-      
+
     # Install js dependencies
     self._print("Building molstar...")
-    
-    
+
+
     # Install nodejs dependencies
     npm_bin_path = f"npm"
     commands = [ ]
@@ -54,7 +56,7 @@ class Program(ProgramTemplate):
     commands += [
       f"{npm_bin_path} run clean --prefix {molstar_dir}",
       f"{npm_bin_path} run build --prefix {molstar_dir}",
-    ] 
+    ]
     for command in commands:
       run_command(command,print_func=self._print)
     self._print("Done.\n\n")

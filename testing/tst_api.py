@@ -87,7 +87,7 @@ def tst_poll_selection(graphics,printing=False):
       print(key)
       print(value)
       print()
-  
+
   passed =  poll == atom_records_1yjp
   if not passed:
     print("Mismatch between polled selection and expected for 1yjp.")
@@ -111,4 +111,3 @@ if __name__ == '__main__':
   tst_select_none(graphics)
   tst_picking_granularity(graphics)
   print('OK')
-

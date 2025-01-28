@@ -100,7 +100,7 @@ class Program(ProgramTemplate):
       server = self.server,
     )
     return graphics
-    
+
 
 
   def run(self):

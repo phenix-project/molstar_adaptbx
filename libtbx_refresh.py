@@ -30,8 +30,8 @@ if adaptbx_dir is not None:
   for file in files:
     src = src_prefix / file
     dst = dst_prefix / file
-    print("Copy file:")
-    print(src," to ")
-    print(dst)
+    #print("Copy file:")
+    #print(src," to ")
+    #print(dst)
     dst.parent.mkdir(exist_ok=True,parents=True)
     shutil.copy(src, dst)
