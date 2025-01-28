@@ -258,60 +258,10 @@ export interface PhenixSelection {
     }
   }
   
-    
-// export interface PhenixLocation {
-//     phenixKey: string | undefined;
-//     phenixSelection: PhenixSelection | undefined;
-//   }
-
-// export class PhenixLocationClass implements PhenixLocation {
-//     phenixKey: undefined;
-//     phenixSelection: undefined;
-
-
 // End 'Dataclasses'
 
 
 
-export class RefMap {
-    molstarToExternal: { [key: string]: string } = {};
-    externalToMolstar: { [value: string]: string } = {};
-    refObjectStorage: {[key: string]: Ref } = {};
-
-
-    addRef(ref: Ref): boolean {
-        const molstarRefId = ref.molstarRefId;
-        const externalRefId = ref.externalRefId;
-        if (this.molstarToExternal.hasOwnProperty(molstarRefId) || this.externalToMolstar.hasOwnProperty(externalRefId)) {
-            return false;
-        }
-        this.molstarToExternal[molstarRefId] = externalRefId;
-        this.externalToMolstar[externalRefId] = molstarRefId;
-        this.refObjectStorage[molstarRefId] = ref;
-        return true;
-    }
-
-    hasRefId(value: string): boolean {
-        return (this.molstarToExternal.hasOwnProperty(value) || this.externalToMolstar.hasOwnProperty(value));
-    }
-
-    retrieveRefId(refIdAny: string): string | null { // returns the molstar ref id for either input
-        if (this.molstarToExternal.hasOwnProperty(refIdAny)) {
-            return refIdAny;
-        } else if (this.externalToMolstar.hasOwnProperty(refIdAny)) {
-            return this.externalToMolstar[refIdAny];
-        } else {
-            throw new Error('refID not present in mapping');
-        }
-    }
-    retrieveRef(refIdAny: string): Ref | undefined { // returns the molstar ref id for either input
-        const refMolstar = this.retrieveRefId(refIdAny);
-        if (refMolstar) { return this.refObjectStorage[refMolstar]; }
-    }
-    summarize() {
-        return JSON.stringify(this.molstarToExternal);
-    }
-};
 
 export class TwoWayDictionary<T, U> {
     private forwardMap: Map<T, U>;
@@ -398,17 +348,8 @@ export type SelectionQuery = {
     params: {
         refId: string
     },
-    // // Move to style
-    // color?: any,
-    // sideChain?: boolean,
-    // representation?: string,
-    // representationColor?: any,
-    // focus?: boolean,
-    // nonSelectedColor?: any;
-    // colorTheme: ColorTheme.BuiltIn;
 };
 
-// export const allSelection: Selection = { 'entity_id': { 'ops': [{ 'op': '==', 'value': '*' }] }, 'asym_id': { 'ops': [{ 'op': '==', 'value': '*' }] }, 'comp_id': { 'ops': [{ 'op': '==', 'value': '*' }] }, 'seq_id': { 'ops': [{ 'op': '==', 'value': '*' }, { 'op': '==', 'value': '*' }] }, 'atom_id': { 'ops': [{ 'op': '==', 'value': '*' }] } };
 export const allSelection: Selection = { 'asym_id': { 'ops': [{ 'op': '==', 'value': '*' }] }, 'comp_id': { 'ops': [{ 'op': '==', 'value': '*' }] }, 'seq_id': { 'ops': [{ 'op': '==', 'value': '*' }, { 'op': '==', 'value': '*' }] }, 'atom_id': { 'ops': [{ 'op': '==', 'value': '*' }] } };
 
 export const allSelectionQuery: SelectionQuery = {
@@ -433,25 +374,6 @@ export const debugQuery: SelectionQuery = {
     }
 };
 
-// Mark style query for deletion
-// type RepresentationString = 'ball-and-stick' | 'cartoon';
-// export type StyleQuery = {
-//     refId: string,
-//     query: SelectionQuery,
-//     color: string,
-//     representation: RepresentationString[],
-//     focus: boolean,
-//     visible: boolean,
-// };
-
-// export const DefaultStyle: StyleQuery = {
-//     refId: '',
-//     query: allSelectionQuery,
-//     color: '#ff2a31',
-//     representation: ['ball-and-stick', 'cartoon'],
-//     focus: false,
-//     visible: true,
-// };
 
 interface Style {
   iso: number | null;
