@@ -1,8 +1,6 @@
 import tempfile
 from pathlib import Path
-from collections import defaultdict
-import subprocess
-from cctbx.crystal.tst_super_cell import pdb_str_1yjp
+from collections import defaultdictfrom cctbx.crystal.tst_super_cell import pdb_str_1yjp
 from iotbx.cli_parser import run_program, get_program_params
 from libtbx.utils import null_out
 from molstar_adaptbx.programs import start_molstar_adapter

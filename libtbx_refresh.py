@@ -3,6 +3,7 @@ from pathlib import Path
 import libtbx.load_env
 import shutil
 
+# Copy files from 'molstar_adaptbx' to 'molstar' that are relevant to Phenix
 adaptbx_dir = libtbx.env.find_in_repositories(relative_path="molstar_adaptbx")
 molstar_dir = libtbx.env.find_in_repositories(relative_path="molstar")
 
