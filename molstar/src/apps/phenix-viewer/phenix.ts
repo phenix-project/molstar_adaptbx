@@ -49,19 +49,6 @@ export namespace Phenix {
         });
     }
 
-    // export function getLociForParams(this: PhenixViewer, query: SelectionQuery): Loci | undefined {
-    //     if (query.params.refId === '') {
-    //         throw new Error('Provide a reference');
-    //     }
-    //     const ref = this.refMapping.retrieveRef(query.params.refId);
-    //     if (ref) {
-    //         const refId = ref.molstarRefId;
-    //         // const assemblyRef = this.plugin.managers.structure.hierarchy.current.structures[0].cell.transform.ref;
-    //         const data = (this.plugin.state.data.select(refId)[0].obj as PluginStateObject.Molecule.Structure).data;
-    //         return QueryHelper.getInteractivityLoci(query, data);
-    //     }
-    // }
-
     export async function loadStructureFromPdbString(this: PhenixViewer, data: string, format: string, label: string, external_ref_id: string) {
         // V2 Function
         this.hasSynced = false;
@@ -414,9 +401,6 @@ export namespace Phenix {
         // this.clearSelection();
         this.plugin.clear();
         this.plugin.build();
-        // this.refMapping = new RefMap();
-        // this.refMapping_data = new RefMap();
-        // this.refMapping_volume = {};
         this.objectStorageMolstar = new TwoWayDictionary();
         this.objectStoragePhenix = new TwoWayDictionary();
         this.phenixState = new MolstarState();
@@ -482,26 +466,6 @@ export namespace Phenix {
 
 
     }
-    // export async function removeRepresentationSelected(this: PhenixViewer, reprName: string) {
-
-    //     // // Structure list to apply selection
-    //     // const ref = this.refMapping.retrieveRef(query.params.refId);
-    //     // const oldStyle = ref.style;
-    //     const loci = this.phenix.getSelectedLoci()
-    //     //const loci = this.phenix.getLociForParams(query);
-    //     // console.log('loci: ', loci);
-    //     if (Loci.isEmpty(loci)) return;
-
-    //     this.plugin.managers.interactivity.lociSelects.selectOnly({ loci });
-    //     const defaultParams = StructureComponentManager.getAddParams(this.plugin, { allowNone: false, hideSelection: true, checkExisting: true });
-    //     const defaultValues = ParamDefinition.getDefaultValues(defaultParams);
-    //     defaultValues.options = { label: 'selection-by-script', checkExisting: true };
-    //     const values = { ...defaultValues, ...{ representation: reprName } };
-    //     // const structures = this.plugin.managers.structure.hierarchy.getStructuresWithSelection();
-    //     // await this.plugin.managers.structure.component.clear(structures);
-    //     // this.plugin.managers.camera.reset();
-    // }
-
     export function checkSingleEntry<K, V>(map: Map<K, V>): { key: K; value: V } | never {
         // V2 Function
         if (map.size === 1) {

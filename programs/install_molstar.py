@@ -26,7 +26,7 @@ class Program(ProgramTemplate):
 
 
   def run(self):
-    # First check if the molstar repo exists in the expected locaion
+    # First check if the molstar repo exists in the expected location
     # (one level up from adaptbx)
     adaptbx_dir = libtbx.env.find_in_repositories(relative_path="molstar_adaptbx")
     molstar_dir = libtbx.env.find_in_repositories(relative_path="molstar")
