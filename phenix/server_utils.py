@@ -8,7 +8,10 @@ import socket
 import tempfile
 import subprocess
 import json
+import uuid
 
+def generate_uuid():
+  return str(uuid.uuid4())
 
 class NodeHttpServer:
   def __init__(self,command,port=8080,allow_port_change=False):

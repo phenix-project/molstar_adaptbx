@@ -5,6 +5,7 @@ This file defines the API for communication with the Phenix implementation of th
 from pathlib import Path
 import time
 import json
+import uuid
 from typing import Optional
 
 import requests
@@ -17,7 +18,6 @@ from qttbx.viewers import ModelViewer
 
 from libtbx.utils import Sorry
 from libtbx import group_args
-from molstar_adaptbx.phenix.utils import generate_uuid
 from molstar_adaptbx.phenix.api import (
   ApiClass,
   ApiRequest,
@@ -55,7 +55,7 @@ class MolstarGraphics(ModelViewer):
     self.web_view = web_view
     self.dm = dm
     self.loaded = {}
-    self.connection_id = generate_uuid()
+    self.connection_id = str(uuid.uuid4())
     self.last_response = None
 
     self.log_list = []

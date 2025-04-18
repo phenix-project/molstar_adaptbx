@@ -8,7 +8,6 @@ from phenix.program_template import ProgramTemplate
 from libtbx import group_args
 import mmtbx
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
-from molstar_adaptbx.phenix.utils import get_conda_env_directory
 from molstar_adaptbx.phenix.molstar import MolstarGraphics
 from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
 # =============================================================================
@@ -81,17 +80,16 @@ class Program(ProgramTemplate):
 
   def initiate_viewer(self):
     # Set up a server to serve the molstar app
-    env_name = "molstar_env"
-    env_dir = get_conda_env_directory(env_name)
 
-
-    env_bin_dir = f"{env_dir}/bin"
+    
     if self.params.root_prefix == "":
-      molstar_install_dir = str(Path(__file__).parent.parent.parent / "molstar")
+      molstar_install_dir = str(Path(__file__).parent.parent.parent.parent / "build" / "molstar")
     else:
       molstar_install_dir = self.params.root_prefix
+    
+    
     self.server = NodeHttpServer([
-      f"{env_bin_dir}/node",
+      "node",
       f"{molstar_install_dir}/src/phenix/server.js"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
