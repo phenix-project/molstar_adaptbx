@@ -1,12 +1,15 @@
 from __future__ import absolute_import, division, print_function
 import subprocess
 import sys
+import os
 import time
 from pathlib import Path
 import code
 from phenix.program_template import ProgramTemplate
 from libtbx import group_args
 import mmtbx
+import libtbx
+from libtbx import easy_run
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
 from molstar_adaptbx.phenix.molstar import MolstarGraphics
 from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
@@ -66,6 +69,9 @@ class Program(ProgramTemplate):
     .type = bool
     .help = "Whether to return the program task within the results for further interaction."
 
+  fetch_pdb = None
+   .type = str
+   .help = "Optionally fetch a pdb file"
 
   """
 
@@ -102,6 +108,13 @@ class Program(ProgramTemplate):
 
 
   def run(self):
+    if self.params.fetch_pdb is not None:
+      cmd = "phenix.fetch_pdb "+self.params.fetch_pdb
+      easy_run.call(cmd)
+    for filename in  os.listdir(os.getcwd()):
+      if self.params.fetch_pdb in filename:
+        self.data_manager.process_model_file(filename)
+        break
     self.graphics = self.initiate_viewer()
     self.graphics.start_viewer()
     # If default model is set, load it immediately

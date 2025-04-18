@@ -245,7 +245,7 @@ class MolstarGraphics(ModelViewer):
     """
 
     # Store that this model has been loaded
-    ref_id = generate_uuid()
+    ref_id = str(uuid.uuid4())
     self.loaded[ref_id] = filename
 
     # Serialize as pdb string
