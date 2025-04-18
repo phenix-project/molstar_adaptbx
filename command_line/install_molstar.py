@@ -6,11 +6,16 @@ import subprocess
 
 
 
-def run(build_dir="../../build"):
-  # Installation assumes that a molstar git repository is in the same
-  # direcitory as the molstar_adaptbx folder
+def run(build_dir="../../../build",molstar_repo_dir="../../molstar"):
+  """
+  Params:
+    build_dir: the relative path (relative to this source file) of phenix build directory
+    molstar_repo_dir: the relative path (from this source file) of molstar git repo
+  """
+
+  build_dir = Path(Path(__file__).parent / build_dir).absolute()
   adaptbx_dir = Path(__file__).parent.parent.absolute()
-  molstar_dir = adaptbx_dir.parent / "molstar"
+  molstar_dir = Path(Path(__file__).parent / molstar_repo_dir).absolute()
 
   if not molstar_dir.exists():
     assert False, "Must have 'molstar' directory present first"
@@ -20,11 +25,13 @@ def run(build_dir="../../build"):
     assert False, "molstar directory not found"
   if not build_dir:
     assert False, "build directory not found"
-  adaptbx_dir = Path(adaptbx_dir)
-  molstar_dir = Path(molstar_dir)
+  adaptbx_dir = Path(adaptbx_dir).absolute()
+  molstar_dir = Path(molstar_dir).absolute()
   build_molstar = Path(build_dir).absolute() / "molstar" # molstar subdirectory inside phenix build
 
   print("Directory paths:")
+  print("phenix build dir:")
+  print("\t",str(build_dir))
   print("molstar_adaptbx module:")
   print("\t",str(adaptbx_dir))
   print("molstar git repository:")
