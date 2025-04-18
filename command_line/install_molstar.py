@@ -30,11 +30,11 @@ def run(build_dir="../../build"):
   print("molstar git repository: "+str(molstar_dir))
   print("phenix build directory: "+str(build_dir))
   print("molstar build parent: "+str(build_molstar))
-  if build_molstar.exists():
-    print("** removing existing molstar build parent **")
-    shutil.rmtree(build_molstar)
-  print("** copying new molstar build parent **")
-  shutil.copytree(molstar_dir,build_molstar)
+
+  
+  if not build_molstar.exists():
+    print("** copying new molstar build parent **")
+    shutil.copytree(molstar_dir,build_molstar)
   molstar_build = build_molstar / "build" # molstar build directory under phenix build
   if not molstar_build.exists():
     molstar_build.mkdir(parents=True)
@@ -51,9 +51,6 @@ def run(build_dir="../../build"):
 
   commands += [
       [f"{npm_bin_path}  install", "--prefix {molstar_dir}"],
-  ]
-
-  commands += [
     [f"{npm_bin_path} run clean",f" --prefix {molstar_dir}"],
     [f"{npm_bin_path} run build",f" --prefix {molstar_dir}"],
   ]
