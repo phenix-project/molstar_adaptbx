@@ -7,9 +7,10 @@ from pathlib import Path
 import code
 from phenix.program_template import ProgramTemplate
 from libtbx import group_args
+from iotbx.pdb.fetch import fetch
 import mmtbx
 import libtbx
-from libtbx import easy_run
+import libtbx.load_env
 from mmtbx.monomer_library.pdb_interpretation import grand_master_phil_str
 from molstar_adaptbx.phenix.molstar import MolstarGraphics
 from molstar_adaptbx.phenix.server_utils import  NodeHttpServer
@@ -73,11 +74,21 @@ class Program(ProgramTemplate):
    .type = str
    .help = "Optionally fetch a pdb file"
 
+  node_executable_path = None
+   .type = str
+   .help = "Optionally provide the path to a node (nodejs) executable manually"
+
   """
 
   def validate(self):
-    pass
+    if self.params.node_executable_path is None:
+      if sys.platform == 'win32':
+        node_exec = libtbx.env.under_base(os.path.join('node.exe'))
+      else:
+        node_exec = libtbx.env.under_base(os.path.join('bin', 'node'))
 
+      assert os.path.isfile(node_exec)
+      self.params.node_executable_path = node_exec
 
   def get_results(self):
     return self.results
@@ -95,7 +106,7 @@ class Program(ProgramTemplate):
     
     
     self.server = NodeHttpServer([
-      "node",
+      f"{str(self.params.node_executable_path)}",
       f"{molstar_install_dir}/src/phenix/server.js"
     ],port=self.params.view_server_port,allow_port_change=self.params.allow_port_change)
 
@@ -109,12 +120,9 @@ class Program(ProgramTemplate):
 
   def run(self):
     if self.params.fetch_pdb is not None:
-      cmd = "phenix.fetch_pdb "+self.params.fetch_pdb
-      easy_run.call(cmd)
-    for filename in  os.listdir(os.getcwd()):
-      if self.params.fetch_pdb in filename:
-        self.data_manager.process_model_file(filename)
-        break
+      o = fetch(self.params.fetch_pdb,entity='model_pdb')
+      self.data_manager.process_model_str(self.params.fetch_pdb,o.read().decode('utf-8'))
+
     self.graphics = self.initiate_viewer()
     self.graphics.start_viewer()
     # If default model is set, load it immediately
