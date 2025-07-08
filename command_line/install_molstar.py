@@ -85,7 +85,7 @@ def run(build_dir="../../../build",molstar_repo_dir="../../molstar"):
   os.chdir(build_molstar)
 
   # Install nodejs dependencies
-  npm_bin_path = f"npm"
+  npm_bin_path = '`conda run -p "$CONDA_PREFIX" which npm`' 
 
   commands = [
     [npm_bin_path+"  install", "--prefix "+str(molstar_dir)],
